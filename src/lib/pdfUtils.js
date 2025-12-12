@@ -10,45 +10,65 @@ export async function g3(contentFile, letterheadFile) {
     const contentDoc = await PDFDocument.load(contentBuffer);
     const letterheadDoc = await PDFDocument.load(letterheadBuffer);
 
-    // Embed the first page of the letterhead
-    const [letterheadPage] = await contentDoc.copyPages(letterheadDoc, [0]);
-    const embeddedLetterhead = await contentDoc.embedPage(letterheadPage);
+    // Create a new document for the output
+    const newDoc = await PDFDocument.create();
+
+    // Embed the letterhead page (background)
+    const letterheadPage = letterheadDoc.getPage(0);
+    const embeddedLh = await newDoc.embedPage(letterheadPage);
+    const { width: lhWidth, height: lhHeight } = embeddedLh;
 
     const pageCount = contentDoc.getPageCount();
-    const font = await contentDoc.embedFont(StandardFonts.Helvetica);
+    const font = await newDoc.embedFont(StandardFonts.Helvetica);
 
     for (let i = 0; i < pageCount; i++) {
-      const page = contentDoc.getPage(i);
-      const { width, height } = page.getSize();
+        const contentPage = contentDoc.getPage(i);
+        const embeddedContent = await newDoc.embedPage(contentPage);
 
-      // Draw Letterhead (Background)
-      page.drawPage(embeddedLetterhead, {
-        x: 0,
-        y: 0,
-        width: width,
-        height: height,
-        blendMode: 'Multiply'
-      });
+        // Create new page matching letterhead size
+        const newPage = newDoc.addPage([lhWidth, lhHeight]);
 
-      // Draw Page Number
-      // Style: Golden Yellow (1, 0.843, 0), Rotated 90deg, Right Edge
-      const text = "Página " + (i + 1);
-      const textSize = 12;
-      const textWidth = font.widthOfTextAtSize(text, textSize);
+        // 1. Draw Letterhead (Background)
+        newPage.drawPage(embeddedLh, {
+            x: 0,
+            y: 0,
+            width: lhWidth,
+            height: lhHeight
+        });
 
-      // Position: x = width - 15 (margin from right), y = 20 (margin from bottom)
-      // Rotation: 90 degrees
-      page.drawText(text, {
-        x: width - 15,
-        y: 20,
-        size: textSize,
-        font: font,
-        color: rgb(1, 0.843, 0), // Golden Yellow
-        rotate: degrees(90)
-      });
+        // 2. Draw Content (Scaled and Centered)
+        // Scale factor 0.85 reduces size to 85%, creating safe margins
+        const scaleFactor = 0.85; 
+        const newContentWidth = embeddedContent.width * scaleFactor;
+        const newContentHeight = embeddedContent.height * scaleFactor;
+        
+        // Center the content on the page
+        const xPos = (lhWidth - newContentWidth) / 2;
+        const yPos = (lhHeight - newContentHeight) / 2;
+
+        newPage.drawPage(embeddedContent, {
+            x: xPos,
+            y: yPos,
+            width: newContentWidth,
+            height: newContentHeight
+        });
+
+        // 3. Draw Page Number
+        // Left original logic: Right edge, rotated 90deg
+        const text = "Página " + (i + 1);
+        const textSize = 12;
+       
+        newPage.drawText(text, {
+            x: lhWidth - 15,
+            y: 20,
+            size: textSize,
+            font: font,
+            color: rgb(1, 0.843, 0), // Golden Yellow
+            rotate: degrees(90)
+        });
     }
 
-    const pdfBytes = await contentDoc.save();
+    const pdfBytes = await newDoc.save();
     return new Blob([pdfBytes], { type: "application/pdf" });
 
   } catch (error) {
