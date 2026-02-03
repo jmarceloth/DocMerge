@@ -494,7 +494,7 @@ function App() {
         </div>
       </div>
 
-      {/* Section 3: Optimize PDF - Fixed width v2 */}
+      {/* Section 3: Optimize PDF - v2.1 (2026-02-03) */}
       <div className="relative group">
         <div className="absolute -inset-1 bg-gradient-to-r from-orange-600 to-amber-600 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000"></div>
         <div className="relative bg-gray-900 ring-1 ring-gray-800 rounded-xl p-8 shadow-2xl">
