@@ -492,120 +492,120 @@ function App() {
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Section 3: Optimize PDF - v2.1 (2026-02-03) */}
-      <div className="relative group">
-        <div className="absolute -inset-1 bg-gradient-to-r from-orange-600 to-amber-600 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000"></div>
-        <div className="relative bg-gray-900 ring-1 ring-gray-800 rounded-xl p-8 shadow-2xl">
-          <div className="flex items-center gap-4 mb-8 border-b border-gray-800 pb-6">
-            <div className="p-3 bg-orange-500/10 rounded-xl">
-              <FileText className="w-6 h-6 text-orange-400" />
-            </div>
-            <div>
-              <h2 className="text-2xl font-semibold text-white">Otimizar PDF</h2>
-              <p className="text-sm text-gray-400">Reduza o tamanho do arquivo sem perder qualidade.</p>
-            </div>
-          </div>
-
-          <div className="space-y-6">
-            <div
-              className="border-2 border-dashed p-10 text-center rounded-xl cursor-pointer border-gray-700 hover:border-orange-500/50 hover:bg-gray-800/50 transition-all duration-300 group/drop"
-              onClick={() => optimizeInputRef.current?.click()}
-            >
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-800 flex items-center justify-center group-hover/drop:scale-110 transition-transform duration-300">
-                <Upload className="w-8 h-8 text-gray-400 group-hover/drop:text-orange-400 transition-colors" />
+        {/* Section 3: Optimize PDF - v2.1 (2026-02-03) */}
+        <div className="relative group">
+          <div className="absolute -inset-1 bg-gradient-to-r from-orange-600 to-amber-600 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000"></div>
+          <div className="relative bg-gray-900 ring-1 ring-gray-800 rounded-xl p-8 shadow-2xl">
+            <div className="flex items-center gap-4 mb-8 border-b border-gray-800 pb-6">
+              <div className="p-3 bg-orange-500/10 rounded-xl">
+                <FileText className="w-6 h-6 text-orange-400" />
               </div>
-              {optimizeFile ? (
-                <div>
-                  <p className="font-medium text-gray-200 text-lg">{optimizeFile.name}</p>
-                  <p className="text-sm text-gray-400 mt-1">Tamanho original: {(originalSize / 1024 / 1024).toFixed(2)} MB</p>
-                  {optimizedSize > 0 && (
-                    <div className="mt-2">
-                      <p className="text-sm text-green-400">Tamanho otimizado: {(optimizedSize / 1024 / 1024).toFixed(2)} MB</p>
-                      <p className="text-xs text-gray-500">
-                        Redução: {((1 - optimizedSize / originalSize) * 100).toFixed(1)}%
-                      </p>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div>
-                  <p className="font-medium text-gray-300 text-lg">Clique para selecionar um PDF</p>
-                  <p className="text-sm text-gray-500 mt-2">Será otimizado para reduzir o tamanho</p>
-                </div>
-              )}
+              <div>
+                <h2 className="text-2xl font-semibold text-white">Otimizar PDF</h2>
+                <p className="text-sm text-gray-400">Reduza o tamanho do arquivo sem perder qualidade.</p>
+              </div>
             </div>
-            <input
-              ref={optimizeInputRef}
-              type="file"
-              accept="application/pdf"
-              onChange={(e) => handleOptimizeFileChange(e.target.files?.[0] || null)}
-              className="hidden"
-            />
 
-            <div className="space-y-4 bg-gray-950/50 p-4 rounded-xl border border-gray-800">
-              <Label>Qualidade da Compressão: {(optimizeQuality * 100).toFixed(0)}%</Label>
+            <div className="space-y-6">
+              <div
+                className="border-2 border-dashed p-10 text-center rounded-xl cursor-pointer border-gray-700 hover:border-orange-500/50 hover:bg-gray-800/50 transition-all duration-300 group/drop"
+                onClick={() => optimizeInputRef.current?.click()}
+              >
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-800 flex items-center justify-center group-hover/drop:scale-110 transition-transform duration-300">
+                  <Upload className="w-8 h-8 text-gray-400 group-hover/drop:text-orange-400 transition-colors" />
+                </div>
+                {optimizeFile ? (
+                  <div>
+                    <p className="font-medium text-gray-200 text-lg">{optimizeFile.name}</p>
+                    <p className="text-sm text-gray-400 mt-1">Tamanho original: {(originalSize / 1024 / 1024).toFixed(2)} MB</p>
+                    {optimizedSize > 0 && (
+                      <div className="mt-2">
+                        <p className="text-sm text-green-400">Tamanho otimizado: {(optimizedSize / 1024 / 1024).toFixed(2)} MB</p>
+                        <p className="text-xs text-gray-500">
+                          Redução: {((1 - optimizedSize / originalSize) * 100).toFixed(1)}%
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div>
+                    <p className="font-medium text-gray-300 text-lg">Clique para selecionar um PDF</p>
+                    <p className="text-sm text-gray-500 mt-2">Será otimizado para reduzir o tamanho</p>
+                  </div>
+                )}
+              </div>
               <input
-                type="range"
-                min="60"
-                max="95"
-                value={optimizeQuality * 100}
-                onChange={(e) => setOptimizeQuality(e.target.value / 100)}
-                className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-orange-500"
-                disabled={isOptimizing}
+                ref={optimizeInputRef}
+                type="file"
+                accept="application/pdf"
+                onChange={(e) => handleOptimizeFileChange(e.target.files?.[0] || null)}
+                className="hidden"
               />
-              <div className="text-sm text-gray-400 text-center">
-                {optimizeQuality >= 0.85
-                  ? "Alta qualidade (menor compressão)"
-                  : optimizeQuality >= 0.75
-                    ? "Balanceada (recomendado)"
-                    : "Agressiva (maior compressão)"}
-              </div>
-            </div>
 
-            {isOptimizing && (
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm text-gray-400">
-                  <span>Processando...</span>
-                  <span>{optimizeProgress}%</span>
-                </div>
-                <div className="w-full bg-gray-800 rounded-full h-2.5">
-                  <div
-                    className="bg-gradient-to-r from-orange-500 to-amber-500 h-2.5 rounded-full transition-all duration-300"
-                    style={{ width: `${optimizeProgress}%` }}
-                  ></div>
-                </div>
-              </div>
-            )}
-
-            <div className="space-y-4 pt-4">
-              <Label>Nome do Arquivo Otimizado</Label>
-              <div className="flex gap-4">
-                <Input
-                  value={optimizeFilename}
-                  onChange={(e) => setOptimizeFilename(e.target.value)}
-                  className="flex-1"
-                  placeholder="ex: otimizado.pdf"
+              <div className="space-y-4 bg-gray-950/50 p-4 rounded-xl border border-gray-800">
+                <Label>Qualidade da Compressão: {(optimizeQuality * 100).toFixed(0)}%</Label>
+                <input
+                  type="range"
+                  min="60"
+                  max="95"
+                  value={optimizeQuality * 100}
+                  onChange={(e) => setOptimizeQuality(e.target.value / 100)}
+                  className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-orange-500"
                   disabled={isOptimizing}
                 />
-                <Button
-                  onClick={handleOptimize}
-                  disabled={!optimizeFile || isOptimizing}
-                  size="lg"
-                  className="min-w-[200px] bg-orange-600 hover:bg-orange-700 shadow-orange-900/20 focus-visible:ring-orange-500"
-                >
-                  {isOptimizing ? (
-                    <span className="flex items-center gap-2">
-                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      Processando...
-                    </span>
-                  ) : (
-                    <>
-                      <Download className="mr-2 h-5 w-5" /> Otimizar PDF
-                    </>
-                  )}
-                </Button>
+                <div className="text-sm text-gray-400 text-center">
+                  {optimizeQuality >= 0.85
+                    ? "Alta qualidade (menor compressão)"
+                    : optimizeQuality >= 0.75
+                      ? "Balanceada (recomendado)"
+                      : "Agressiva (maior compressão)"}
+                </div>
+              </div>
+
+              {isOptimizing && (
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm text-gray-400">
+                    <span>Processando...</span>
+                    <span>{optimizeProgress}%</span>
+                  </div>
+                  <div className="w-full bg-gray-800 rounded-full h-2.5">
+                    <div
+                      className="bg-gradient-to-r from-orange-500 to-amber-500 h-2.5 rounded-full transition-all duration-300"
+                      style={{ width: `${optimizeProgress}%` }}
+                    ></div>
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-4 pt-4">
+                <Label>Nome do Arquivo Otimizado</Label>
+                <div className="flex gap-4">
+                  <Input
+                    value={optimizeFilename}
+                    onChange={(e) => setOptimizeFilename(e.target.value)}
+                    className="flex-1"
+                    placeholder="ex: otimizado.pdf"
+                    disabled={isOptimizing}
+                  />
+                  <Button
+                    onClick={handleOptimize}
+                    disabled={!optimizeFile || isOptimizing}
+                    size="lg"
+                    className="min-w-[200px] bg-orange-600 hover:bg-orange-700 shadow-orange-900/20 focus-visible:ring-orange-500"
+                  >
+                    {isOptimizing ? (
+                      <span className="flex items-center gap-2">
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        Processando...
+                      </span>
+                    ) : (
+                      <>
+                        <Download className="mr-2 h-5 w-5" /> Otimizar PDF
+                      </>
+                    )}
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
