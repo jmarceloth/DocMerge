@@ -81,6 +81,20 @@ class PDFService:
                 content_doc,
                 page_num
             )
+            
+            # Add page number in bottom right corner
+            page_number_text = f"{page_num + 1} / {len(content_doc)}"
+            text_point = fitz.Point(
+                letterhead_width - 60,  # 60pt from right edge
+                letterhead_height - 20   # 20pt from bottom
+            )
+            new_page.insert_text(
+                text_point,
+                page_number_text,
+                fontsize=10,
+                color=(0, 0, 0),  # Black color
+                fontname="helv"   # Helvetica
+            )
         
         # Save to bytes
         output_bytes = output_doc.tobytes(
