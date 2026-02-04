@@ -178,8 +178,22 @@
                             <p class="text-xs text-gray-500">ou arraste e solte aqui</p>
                         </div>
                         <input type="file" id="combine-files" name="files" accept=".pdf" multiple required
-                            onchange="document.querySelector('#combine-files-list').textContent = Array.from(this.files).map(f => f.name).join(', ') || 'Nenhum arquivo selecionado'">
-                        <p id="combine-files-list" class="text-sm text-gray-500 mt-2">Nenhum arquivo selecionado</p>
+                            onchange="handleCombineFilesSelected(this.files)">
+                    </div>
+
+                    <!-- File List for Reordering -->
+                    <div id="combine-files-container" class="hidden space-y-2">
+                        <div class="flex items-center justify-between mb-2">
+                            <label class="block text-sm font-medium text-gray-300">Ordem dos arquivos:</label>
+                            <button type="button" onclick="document.getElementById('combine-files').click()"
+                                class="text-xs text-purple-400 hover:text-purple-300">
+                                + Adicionar mais
+                            </button>
+                        </div>
+                        <div id="combine-files-list"
+                            class="space-y-2 bg-gray-800/50 rounded-lg p-3 max-h-60 overflow-y-auto">
+                            <!-- Files will be dynamically added here -->
+                        </div>
                     </div>
 
                     <!-- Submit Button -->

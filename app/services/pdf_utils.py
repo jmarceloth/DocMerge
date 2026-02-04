@@ -141,7 +141,7 @@ class PDFService:
         quality: int = 80
     ) -> bytes:
         """
-        Optimize PDF by compressing images and removing unused objects
+        Optimize PDF by aggressively compressing and downscaling images
         
         Args:
             pdf_bytes: PDF file bytes
@@ -152,48 +152,77 @@ class PDFService:
         """
         doc = fitz.open(stream=pdf_bytes, filetype="pdf")
         
+        # Maximum dimension for images (downscale if larger)
+        MAX_IMAGE_DIM = 1920
+        
         # Process each page
         for page_num in range(len(doc)):
             page = doc[page_num]
             
             # Get all images on page
-            image_list = page.get_images()
+            image_list = page.get_images(full=True)
             
-            for img_index, img in enumerate(image_list):
+            for img in image_list:
                 xref = img[0]
                 
                 try:
                     # Extract image
                     base_image = doc.extract_image(xref)
                     image_bytes = base_image["image"]
-                    image_ext = base_image["ext"]
-                    
-                    # Skip already compressed JPEGs
-                    if image_ext == "jpeg" or image_ext == "jpg":
-                        continue
                     
                     # Convert to PIL Image
                     pil_image = Image.open(io.BytesIO(image_bytes))
                     
-                    # Convert to RGB if necessary
-                    if pil_image.mode in ("RGBA", "P", "L"):
-                        pil_image = pil_image.convert("RGB")
+                    # Get original dimensions
+                    original_width, original_height = pil_image.size
                     
-                    # Compress  
+                    # Downscale if too large
+                    if max(original_width, original_height) > MAX_IMAGE_DIM:
+                        if original_width > original_height:
+                            new_width = MAX_IMAGE_DIM
+                            new_height = int(original_height * (MAX_IMAGE_DIM / original_width))
+                        else:
+                            new_height = MAX_IMAGE_DIM
+                            new_width = int(original_width * (MAX_IMAGE_DIM / original_height))
+                        
+                        pil_image = pil_image.resize((new_width, new_height), Image.Resampling.LANCZOS)
+                    
+                    # Convert to RGB if necessary
+                    if pil_image.mode not in ("RGB", "L"):
+                        if pil_image.mode == "RGBA":
+                            # Create white background for transparent images
+                            background = Image.new("RGB", pil_image.size, (255, 255, 255))
+                            background.paste(pil_image, mask=pil_image.split()[3])  # Use alpha as mask
+                            pil_image = background
+                        else:
+                            pil_image = pil_image.convert("RGB")
+                    
+                    # Compress aggressively
                     output = io.BytesIO()
                     pil_image.save(
                         output,
                         format="JPEG",
                         quality=quality,
-                        optimize=True
+                        optimize=True,
+                        progressive=True
                     )
-                    
-                    # Replace image in PDF
                     compressed_bytes = output.getvalue()
                     
-                    # Update image
-                    doc._deleteObject(xref)
-                    
+                    # Only replace if smaller
+                    if len(compressed_bytes) < len(image_bytes):
+                        # Get image rectangle on page
+                        img_rect = page.get_image_rects(xref)[0] if page.get_image_rects(xref) else None
+                        
+                        if img_rect:
+                            # Remove old image
+                            page.delete_image(xref)
+                            
+                            # Insert compressed image
+                            page.insert_image(
+                                img_rect,
+                                stream=compressed_bytes
+                            )
+                
                 except Exception as e:
                     # Skip problematic images
                     print(f"Could not compress image {xref}: {e}")
@@ -201,12 +230,13 @@ class PDFService:
         
         # Save with maximum compression
         output_bytes = doc.tobytes(
-            garbage=4,      # Remove unused objects
-            deflate=True,   # Compress streams
-            clean=True,     # Clean structure
+            garbage=4,            # Remove unused objects
+            deflate=True,         # Compress streams
+            clean=True,           # Clean structure
             deflate_images=True,  # Compress images
             deflate_fonts=True    # Compress fonts
         )
         
         doc.close()
         return output_bytes
+
