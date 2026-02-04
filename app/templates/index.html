@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DocMerge PDF - Ferramentas Profissionais</title>
+    
+    <!-- TailwindCSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        /* Custom animations and styles */
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .animate-gradient {
+            background-size: 200% 200%;
+            animation: gradient 15s ease infinite;
+        }
+        
+        .glass-effect {
+            background: rgba(17, 24, 39, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(55, 65, 81, 0.3);
+        }
+        
+        /* File input styling */
+        input[type="file"] {
+            display: none;
+        }
+        
+        /* Progress bar animation */
+        @keyframes progress {
+            0% { width: 0%; }
+        }
+        
+        .htmx-request .htmx-indicator {
+            display: inline-block;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 text-gray-100 font-sans">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-12">
+        
+        <!-- Header -->
+        <div class="text-center space-y-4">
+            <div class="inline-flex items-center justify-center p-3 bg-blue-500/10 rounded-2xl mb-4 ring-1 ring-blue-500/20">
+                <i data-lucide="file-text" class="w-8 h-8 text-blue-400"></i>
+            </div>
+            <h1 class="text-5xl font-bold tracking-tight bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
+                DocMerge PDF
+            </h1>
+            <p class="text-xl text-gray-400 max-w-2xl mx-auto">
+                Ferramentas profissionais para manipulação de PDFs
+            </p>
+        </div>
+
+        <!-- Section 1: Merge with Letterhead -->
+        <div class="relative group">
+            <div class="absolute -inset-1 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000"></div>
+            <div class="relative bg-gray-900 ring-1 ring-gray-800 rounded-xl p-8 shadow-2xl">
+                <div class="flex items-center gap-4 mb-8 border-b border-gray-800 pb-6">
+                    <div class="p-3 bg-blue-500/10 rounded-xl">
+                        <i data-lucide="file-text" class="w-6 h-6 text-blue-400"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-2xl font-semibold text-white">Aplicar Timbrado</h2>
+                        <p class="text-sm text-gray-400">Mescle um PDF de conteúdo com um fundo timbrado.</p>
+                    </div>
+                </div>
+
+                <form hx-post="/api/merge/" 
+                      hx-encoding="multipart/form-data"
+                      hx-target="#merge-result"
+                      hx-indicator="#merge-loading"
+                      class="space-y-6">
+                    
+                    <!-- Content PDF Upload -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">PDF Conteúdo</label>
+                        <div class="border-2 border-dashed border-gray-700 hover:border-blue-500/50 rounded-xl p-10 text-center cursor-pointer transition-all duration-300 group/drop"
+                             onclick="document.getElementById('merge-content').click()">
+                            <i data-lucide="upload" class="w-12 h-12 mx-auto mb-4 text-gray-500 group-hover/drop:text-blue-400 transition-colors"></i>
+                            <p class="text-gray-400 mb-2">Clique para selecionar o arquivo de conteúdo</p>
+                            <p class="text-xs text-gray-500">ou arraste e solte aqui</p>
+                        </div>
+                        <input type="file" id="merge-content" name="content" accept=".pdf" required
+                               onchange="document.querySelector('#merge-content-name').textContent = this.files[0]?.name || 'Nenhum arquivo selecionado'">
+                        <p id="merge-content-name" class="text-sm text-gray-500 mt-2">Nenhum arquivo selecionado</p>
+                    </div>
+
+                    <!-- Letterhead PDF Upload -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">PDF Timbrado</label>
+                        <div class="border-2 border-dashed border-gray-700 hover:border-blue-500/50 rounded-xl p-10 text-center cursor-pointer transition-all duration-300 group/drop"
+                             onclick="document.getElementById('merge-letterhead').click()">
+                            <i data-lucide="upload" class="w-12 h-12 mx-auto mb-4 text-gray-500 group-hover/drop:text-blue-400 transition-colors"></i>
+                            <p class="text-gray-400 mb-2">Clique para selecionar o timbrado</p>
+                            <p class="text-xs text-gray-500">ou arraste e solte aqui</p>
+                        </div>
+                        <input type="file" id="merge-letterhead" name="letterhead" accept=".pdf" required
+                               onchange="document.querySelector('#merge-letterhead-name').textContent = this.files[0]?.name || 'Nenhum arquivo selecionado'">
+                        <p id="merge-letterhead-name" class="text-sm text-gray-500 mt-2">Nenhum arquivo selecionado</p>
+                    </div>
+
+                    <!-- Scale Slider -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">
+                            Escala do Conteúdo: <span id="merge-scale-value">85%</span>
+                        </label>
+                        <input type="range" name="scale" min="50" max="100" value="85" 
+                               class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+                               oninput="document.getElementById('merge-scale-value').textContent = this.value + '%'; this.value = this.value / 100">
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" 
+                            class="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-blue-500/50 flex items-center justify-center gap-2">
+                        <i data-lucide="download" class="w-5 h-5"></i>
+                        <span>Mesclar PDFs</span>
+                        <span id="merge-loading" class="htmx-indicator">
+                            <i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i>
+                        </span>
+                    </button>
+                </form>
+
+                <div id="merge-result" class="mt-4"></div>
+            </div>
+        </div>
+
+        <!-- Section 2: Combine Files -->
+        <div class="relative group">
+            <div class="absolute -inset-1 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000"></div>
+            <div class="relative bg-gray-900 ring-1 ring-gray-800 rounded-xl p-8 shadow-2xl">
+                <div class="flex items-center gap-4 mb-8 border-b border-gray-800 pb-6">
+                    <div class="p-3 bg-purple-500/10 rounded-xl">
+                        <i data-lucide="layers" class="w-6 h-6 text-purple-400"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-2xl font-semibold text-white">Combinar Arquivos</h2>
+                        <p class="text-sm text-gray-400">Junte múltiplos PDFs em um único arquivo.</p>
+                    </div>
+                </div>
+
+                <form hx-post="/api/combine/" 
+                      hx-encoding="multipart/form-data"
+                      hx-target="#combine-result"
+                      hx-indicator="#combine-loading"
+                      class="space-y-6">
+                    
+                    <!-- Multiple Files Upload -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Selecione múltiplos PDFs</label>
+                        <div class="border-2 border-dashed border-gray-700 hover:border-purple-500/50 rounded-xl p-10 text-center cursor-pointer transition-all duration-300 group/drop"
+                             onclick="document.getElementById('combine-files').click()">
+                            <i data-lucide="upload" class="w-12 h-12 mx-auto mb-4 text-gray-500 group-hover/drop:text-purple-400 transition-colors"></i>
+                            <p class="text-gray-400 mb-2">Clique para selecionar múltiplos arquivos</p>
+                            <p class="text-xs text-gray-500">ou arraste e solte aqui</p>
+                        </div>
+                        <input type="file" id="combine-files" name="files" accept=".pdf" multiple required
+                               onchange="document.querySelector('#combine-files-list').textContent = Array.from(this.files).map(f => f.name).join(', ') || 'Nenhum arquivo selecionado'">
+                        <p id="combine-files-list" class="text-sm text-gray-500 mt-2">Nenhum arquivo selecionado</p>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit"
+                            class="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-purple-500/50 flex items-center justify-center gap-2">
+                        <i data-lucide="download" class="w-5 h-5"></i>
+                        <span>Combinar Arquivos</span>
+                        <span id="combine-loading" class="htmx-indicator">
+                            <i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i>
+                        </span>
+                    </button>
+                </form>
+
+                <div id="combine-result" class="mt-4"></div>
+            </div>
+        </div>
+
+        <!-- Section 3: Optimize PDF -->
+        <div class="relative group">
+            <div class="absolute -inset-1 bg-gradient-to-r from-orange-600 to-amber-600 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000"></div>
+            <div class="relative bg-gray-900 ring-1 ring-gray-800 rounded-xl p-8 shadow-2xl">
+                <div class="flex items-center gap-4 mb-8 border-b border-gray-800 pb-6">
+                    <div class="p-3 bg-orange-500/10 rounded-xl">
+                        <i data-lucide="zap" class="w-6 h-6 text-orange-400"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-2xl font-semibold text-white">Otimizar PDF</h2>
+                        <p class="text-sm text-gray-400">Reduza o tamanho do arquivo sem perder qualidade.</p>
+                    </div>
+                </div>
+
+                <form hx-post="/api/optimize/" 
+                      hx-encoding="multipart/form-data"
+                      hx-target="#optimize-result"
+                      hx-indicator="#optimize-loading"
+                      class="space-y-6">
+                    
+                    <!-- PDF Upload -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">PDF para otimizar</label>
+                        <div class="border-2 border-dashed border-gray-700 hover:border-orange-500/50 rounded-xl p-10 text-center cursor-pointer transition-all duration-300 group/drop"
+                             onclick="document.getElementById('optimize-file').click()">
+                            <i data-lucide="upload" class="w-12 h-12 mx-auto mb-4 text-gray-500 group-hover/drop:text-orange-400 transition-colors"></i>
+                            <p class="text-gray-400 mb-2">Clique para selecionar um PDF</p>
+                            <p class="text-xs text-gray-500">ou arraste e solte aqui</p>
+                        </div>
+                        <input type="file" id="optimize-file" name="file" accept=".pdf" required
+                               onchange="document.querySelector('#optimize-file-name').textContent = this.files[0]?.name || 'Nenhum arquivo selecionado'">
+                        <p id="optimize-file-name" class="text-sm text-gray-500 mt-2">Nenhum arquivo selecionado</p>
+                    </div>
+
+                    <!-- Quality Slider -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">
+                            Qualidade da Compressão: <span id="optimize-quality-value">80%</span>
+                        </label>
+                        <input type="range" name="quality" min="60" max="95" value="80" 
+                               class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+                               oninput="document.getElementById('optimize-quality-value').textContent = this.value + '%'">
+                        <p class="text-xs text-gray-500 mt-2">
+                            <span class="text-orange-400">Menor qualidade</span> = 
+                            <span class="text-green-400">Maior compressão</span>
+                        </p>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit"
+                            class="w-full bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-orange-500/50 flex items-center justify-center gap-2">
+                        <i data-lucide="download" class="w-5 h-5"></i>
+                        <span>Otimizar PDF</span>
+                        <span id="optimize-loading" class="htmx-indicator">
+                            <i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i>
+                        </span>
+                    </button>
+                </form>
+
+                <div id="optimize-result" class="mt-4"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Initialize Lucide Icons -->
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>
