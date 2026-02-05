@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import os
 
 # Import routers
-from app.routers import merge, combine, optimize
+from app.routers import merge, combine, optimize, letterhead
 
 app = FastAPI(
     title="DocMerge",
@@ -36,6 +36,7 @@ templates = Jinja2Templates(directory="app/templates")
 app.include_router(merge.router, prefix="/api/merge", tags=["merge"])
 app.include_router(combine.router, prefix="/api/combine", tags=["combine"])
 app.include_router(optimize.router, prefix="/api/optimize", tags=["optimize"])
+app.include_router(letterhead.router)
 
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):

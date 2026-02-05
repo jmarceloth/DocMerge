@@ -113,17 +113,68 @@
 
                     <!-- Letterhead PDF Upload -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-300 mb-2">PDF Timbrado</label>
+                        <div class="flex items-center justify-between mb-2">
+                            <label class="block text-sm font-medium text-gray-300">PDF Timbrado</label>
+                            <button type="button" onclick="showLetterheadManager()"
+                                class="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1">
+                                <i data-lucide="settings" class="w-3 h-3"></i>
+                                Gerenciar Padrão
+                            </button>
+                        </div>
+
+                        <!-- Default Letterhead Status -->
+                        <div id="default-letterhead-status" class="mb-3 hidden">
+                            <div
+                                class="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <i data-lucide="check-circle" class="w-4 h-4 text-blue-400"></i>
+                                    <span class="text-sm text-blue-300">Timbrado padrão configurado</span>
+                                </div>
+                                <span class="text-xs text-gray-400">(opcional abaixo)</span>
+                            </div>
+                        </div>
+
                         <div class="border-2 border-dashed border-gray-700 hover:border-blue-500/50 rounded-xl p-10 text-center cursor-pointer transition-all duration-300 group/drop"
                             onclick="document.getElementById('merge-letterhead').click()">
                             <i data-lucide="upload"
                                 class="w-12 h-12 mx-auto mb-4 text-gray-500 group-hover/drop:text-blue-400 transition-colors"></i>
-                            <p class="text-gray-400 mb-2">Clique para selecionar o timbrado</p>
-                            <p class="text-xs text-gray-500">ou arraste e solte aqui</p>
+                            <p class="text-gray-400 mb-2">Timbrado personalizado (opcional)</p>
+                            <p class="text-xs text-gray-500">Deixe vazio para usar o padrão</p>
                         </div>
-                        <input type="file" id="merge-letterhead" name="letterhead" accept=".pdf" required
-                            onchange="document.querySelector('#merge-letterhead-name').textContent = this.files[0]?.name || 'Nenhum arquivo selecionado'">
-                        <p id="merge-letterhead-name" class="text-sm text-gray-500 mt-2">Nenhum arquivo selecionado</p>
+                        <input type="file" id="merge-letterhead" name="letterhead" accept=".pdf"
+                            onchange="document.querySelector('#merge-letterhead-name').textContent = this.files[0]?.name || 'Usando timbrado padrão'">
+                        <p id="merge-letterhead-name" class="text-sm text-gray-500 mt-2">Usando timbrado padrão</p>
+                    </div>
+
+                    <!-- Default Letterhead Manager Modal -->
+                    <div id="letterhead-manager-modal"
+                        class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                        <div class="bg-gray-800 rounded-xl p-6 max-w-md w-full mx-4 shadow-2xl">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-semibold text-white">Timbrado Padrão</h3>
+                                <button onclick="closeLetterheadManager()" class="text-gray-400 hover:text-white">
+                                    <i data-lucide="x" class="w-5 h-5"></i>
+                                </button>
+                            </div>
+                            <p class="text-sm text-gray-400 mb-4">
+                                Configure o timbrado que será usado automaticamente em todos os merges.
+                            </p>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-300 mb-2">Upload Novo
+                                        Timbrado</label>
+                                    <input type="file" id="default-letterhead-upload" accept=".pdf" class="hidden"
+                                        onchange="uploadDefaultLetterhead(this.files[0])">
+                                    <button type="button"
+                                        onclick="document.getElementById('default-letterhead-upload').click()"
+                                        class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg flex items-center justify-center gap-2">
+                                        <i data-lucide="upload" class="w-4 h-4"></i>
+                                        Selecionar Arquivo
+                                    </button>
+                                </div>
+                                <div id="letterhead-manager-status" class="text-sm text-gray-400"></div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Scale Slider -->
@@ -273,11 +324,75 @@
 
     <!-- JavaScript for file downloads -->
     <script>
-        // ========== LETTERHEAD CACHE ==========
+        // ========== DEFAULT LETTERHEAD MANAGER ==========
+        // Check if default letterhead exists on page load
+        async function checkDefaultLetterhead() {
+            try {
+                const response = await fetch('/api/letterhead/');
+                const data = await response.json();
+
+                if (data.exists) {
+                    document.getElementById('default-letterhead-status').classList.remove('hidden');
+                    document.querySelector('#merge-letterhead-name').textContent = 'Usando timbrado padrão';
+                }
+                lucide.createIcons();
+            } catch (e) {
+                console.error('Error checking default letterhead:', e);
+            }
+        }
+
+        function showLetterheadManager() {
+            document.getElementById('letterhead-manager-modal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function closeLetterheadManager() {
+            document.getElementById('letterhead-manager-modal').classList.add('hidden');
+        }
+
+        async function uploadDefaultLetterhead(file) {
+            if (!file) return;
+
+            const statusDiv = document.getElementById('letterhead-manager-status');
+            statusDiv.innerHTML = '<span class="text-blue-400">Enviando...</span>';
+
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+
+                const response = await fetch('/api/letterhead/', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) throw new Error('Erro ao fazer upload');
+
+                const data = await response.json();
+                statusDiv.innerHTML = '<span class="text-green-400">✓ ' + data.message + '</span>';
+
+                // Update UI
+                document.getElementById('default-letterhead-status').classList.remove('hidden');
+                document.querySelector('#merge-letterhead-name').textContent = 'Usando timbrado padrão';
+
+                lucide.createIcons();
+
+                setTimeout(() => {
+                    closeLetterheadManager();
+                    statusDiv.innerHTML = '';
+                }, 2000);
+
+            } catch (error) {
+                statusDiv.innerHTML = '<span class="text-red-400">✗ Erro: ' + error.message + '</span>';
+            }
+        }
+
+        // ========== LETTERHEAD CACHE (DEPRECATED - Using server-side now) ==========
         const LETTERHEAD_CACHE_KEY = 'docmerge_last_letterhead';
 
         // Load cached letterhead on page load
         window.addEventListener('DOMContentLoaded', async () => {
+            // Check server-side default first
+            await checkDefaultLetterhead();
             const cachedData = localStorage.getItem(LETTERHEAD_CACHE_KEY);
             if (cachedData) {
                 try {
@@ -415,16 +530,11 @@
             e.preventDefault();
 
             const contentFile = document.getElementById('merge-content').files[0];
-            const letterheadFile = await getLetterheadFile(); // Use cached or new
+            const letterheadFile = document.getElementById('merge-letterhead').files[0]; // Optional now
             const scale = document.getElementById('merge-scale').value;
 
             if (!contentFile) {
                 alert('Por favor, selecione o PDF de conteúdo');
-                return;
-            }
-
-            if (!letterheadFile) {
-                alert('Por favor, selecione um timbrado');
                 return;
             }
 
@@ -435,7 +545,10 @@
             try {
                 const formData = new FormData();
                 formData.append('content', contentFile);
-                formData.append('letterhead', letterheadFile);
+                // Only append letterhead if user selected one (otherwise backend uses default)
+                if (letterheadFile) {
+                    formData.append('letterhead', letterheadFile);
+                }
                 formData.append('scale', scale);
 
                 const response = await fetch('/api/merge/', {
@@ -444,7 +557,8 @@
                 });
 
                 if (!response.ok) {
-                    throw new Error('Erro ao processar PDFs');
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Erro ao processar PDFs');
                 }
 
                 // Get the PDF blob
