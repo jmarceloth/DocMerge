@@ -273,16 +273,158 @@
 
     <!-- JavaScript for file downloads -->
     <script>
-        // Merge PDFs handler
+        // ========== LETTERHEAD CACHE ==========
+        const LETTERHEAD_CACHE_KEY = 'docmerge_last_letterhead';
+
+        // Load cached letterhead on page load
+        window.addEventListener('DOMContentLoaded', async () => {
+            const cachedData = localStorage.getItem(LETTERHEAD_CACHE_KEY);
+            if (cachedData) {
+                try {
+                    const { filename, dataUrl } = JSON.parse(cachedData);
+                    // Show cached letterhead info
+                    document.querySelector('#merge-letterhead-name').innerHTML = `
+                        ${filename} <span class="text-purple-400 text-xs">(salvo)</span>
+                    `;
+                } catch (e) {
+                    console.error('Error loading cached letterhead:', e);
+                }
+            }
+        });
+
+        // Save letterhead to cache when selected
+        document.getElementById('merge-letterhead').addEventListener('change', async function (e) {
+            const file = e.target.files[0];
+            if (file) {
+                // Update name display
+                document.querySelector('#merge-letterhead-name').textContent = file.name;
+
+                // Save to localStorage
+                try {
+                    const reader = new FileReader();
+                    reader.onload = function (event) {
+                        const dataUrl = event.target.result;
+                        localStorage.setItem(LETTERHEAD_CACHE_KEY, JSON.stringify({
+                            filename: file.name,
+                            dataUrl: dataUrl,
+                            timestamp: new Date().toISOString()
+                        }));
+                    };
+                    reader.readAsDataURL(file);
+                } catch (e) {
+                    console.error('Error caching letterhead:', e);
+                }
+            }
+        });
+
+        // Get letterhead file (from input or cache)
+        async function getLetterheadFile() {
+            const inputFile = document.getElementById('merge-letterhead').files[0];
+            if (inputFile) return inputFile;
+
+            // Try to get from cache
+            const cachedData = localStorage.getItem(LETTERHEAD_CACHE_KEY);
+            if (cachedData) {
+                try {
+                    const { filename, dataUrl } = JSON.parse(cachedData);
+                    const response = await fetch(dataUrl);
+                    const blob = await response.blob();
+                    return new File([blob], filename, { type: 'application/pdf' });
+                } catch (e) {
+                    console.error('Error retrieving cached letterhead:', e);
+                    return null;
+                }
+            }
+            return null;
+        }
+
+        // ========== COMBINE FILE REORDERING ==========
+        let combineFilesList = [];
+
+        function handleCombineFilesSelected(files) {
+            // Add new files to the list
+            Array.from(files).forEach(file => {
+                if (!combineFilesList.some(f => f.name === file.name && f.size === file.size)) {
+                    combineFilesList.push(file);
+                }
+            });
+
+            renderCombineFilesList();
+            document.getElementById('combine-files-container').classList.remove('hidden');
+        }
+
+        function renderCombineFilesList() {
+            const container = document.getElementById('combine-files-list');
+            container.innerHTML = '';
+
+            combineFilesList.forEach((file, index) => {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'flex items-center justify-between bg-gray-700/50 rounded-lg p-3 group hover:bg-gray-700 transition-colors';
+                fileItem.innerHTML = `
+                    <div class="flex items-center gap-3 flex-1">
+                        <span class="text-gray-400 font-mono text-sm">${index + 1}.</span>
+                        <i data-lucide="file-text" class="w-4 h-4 text-purple-400"></i>
+                        <span class="text-sm text-gray-300 truncate">${file.name}</span>
+                        <span class="text-xs text-gray-500">(${(file.size / 1024).toFixed(1)} KB)</span>
+                    </div>
+                    <div class="flex gap-2">
+                        <button type="button" ${index === 0 ? 'disabled' : ''} onclick="moveCombineFile(${index}, -1)"
+                                class="p-1 hover:bg-gray-600 rounded disabled:opacity-30 disabled:cursor-not-allowed">
+                            <i data-lucide="arrow-up" class="w-4 h-4 text-gray-400"></i>
+                        </button>
+                        <button type="button" ${index === combineFilesList.length - 1 ? 'disabled' : ''} onclick="moveCombineFile(${index}, 1)"
+                                class="p-1 hover:bg-gray-600 rounded disabled:opacity-30 disabled:cursor-not-allowed">
+                            <i data-lucide="arrow-down" class="w-4 h-4 text-gray-400"></i>
+                        </button>
+                        <button type="button" onclick="removeCombineFile(${index})"
+                                class="p-1 hover:bg-red-600 rounded">
+                            <i data-lucide="x" class="w-4 h-4 text-red-400"></i>
+                        </button>
+                    </div>
+                `;
+                container.appendChild(fileItem);
+            });
+
+            lucide.createIcons();
+        }
+
+        function moveCombineFile(index, direction) {
+            const newIndex = index + direction;
+            if (newIndex < 0 || newIndex >= combineFilesList.length) return;
+
+            [combineFilesList[index], combineFilesList[newIndex]] = [combineFilesList[newIndex], combineFilesList[index]];
+            renderCombineFilesList();
+        }
+
+        function removeCombineFile(index) {
+            combineFilesList.splice(index, 1);
+            renderCombineFilesList();
+
+            if (combineFilesList.length === 0) {
+                document.getElementById('combine-files-container').classList.add('hidden');
+            }
+        }
+
+        // Attach event listener for combine files
+        document.getElementById('combine-files').addEventListener('change', function (e) {
+            handleCombineFilesSelected(e.target.files);
+        });
+
+        // ========== MERGE PDFs HANDLER ==========
         document.getElementById('merge-form').addEventListener('submit', async (e) => {
             e.preventDefault();
 
             const contentFile = document.getElementById('merge-content').files[0];
-            const letterheadFile = document.getElementById('merge-letterhead').files[0];
+            const letterheadFile = await getLetterheadFile(); // Use cached or new
             const scale = document.getElementById('merge-scale').value;
 
-            if (!contentFile || !letterheadFile) {
-                alert('Por favor, selecione ambos os arquivos');
+            if (!contentFile) {
+                alert('Por favor, selecione o PDF de conteúdo');
+                return;
+            }
+
+            if (!letterheadFile) {
+                alert('Por favor, selecione um timbrado');
                 return;
             }
 
@@ -342,9 +484,7 @@
         document.getElementById('combine-form').addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            const files = document.getElementById('combine-files').files;
-
-            if (files.length < 2) {
+            if (combineFilesList.length < 2) {
                 alert('Por favor, selecione pelo menos 2 arquivos');
                 return;
             }
@@ -355,7 +495,8 @@
 
             try {
                 const formData = new FormData();
-                Array.from(files).forEach(file => {
+                // Use the reordered file list
+                combineFilesList.forEach(file => {
                     formData.append('files', file);
                 });
 
