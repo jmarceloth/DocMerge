@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+
+{% block title %}Gestão de Pessoas Autorizadas | IELECTRIC DocMerge{% endblock %}
+
+{% block content %}
+<div class="card" style="margin-top: 1.5rem;">
+    <div class="card-header-group">
+        <div>
+            <h2 class="card-title">👥 Controle de Acesso e Pessoas Autorizadas</h2>
+            <p class="card-subtitle">
+                Acesso restrito exclusivamente às contas listadas abaixo (Autenticação Google OIDC).
+            </p>
+        </div>
+        <a href="/" class="btn btn-secondary" style="font-size: 0.85rem; padding: 0.5rem 1rem;">
+            ← Voltar ao DocMerge
+        </a>
+    </div>
+
+    {% if erro %}
+    <div class="alert alert-error">
+        <span>⚠️ <strong>Atenção:</strong> {{ erro }}</span>
+    </div>
+    {% endif %}
+
+    {% if sucesso %}
+    <div class="alert alert-success">
+        <span>✓ <strong>Sucesso:</strong> {{ sucesso }}</span>
+    </div>
+    {% endif %}
+
+    <div class="card" style="background: rgba(30, 39, 56, 0.4); border-color: var(--color-border); padding: 1.5rem; margin-bottom: 2rem;">
+        <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--color-yellow); margin-bottom: 1rem;">
+            ➕ Autorizar Nova Conta Google na Whitelist
+        </h3>
+        <form method="POST" action="/admin/usuarios/adicionar" class="form-grid-admin">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+            <div class="form-group">
+                <label for="email" class="form-label">
+                    E-mail da Conta Google <span class="required-star">*</span>
+                </label>
+                <input type="email" id="email" name="email" class="form-input" required placeholder="exemplo@gmail.com ou conta corporativa">
+            </div>
+
+            <div class="form-group">
+                <label for="role" class="form-label">
+                    Nível de Acesso (RBAC) <span class="required-star">*</span>
+                </label>
+                <select id="role" name="role" class="form-select" required>
+                    <option value="user" selected>Usuário (Operar PDFs)</option>
+                    <option value="admin">Administrador (Total)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary" style="padding: 0.72rem 1.4rem; width: 100%;">
+                    Autorizar Acesso
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.75rem;">
+        <h3 style="font-size: 1.1rem; font-weight: 700; color: #FFFFFF; margin: 0;">
+            Pessoas Cadastradas ({{ usuarios|length }})
+        </h3>
+        <span style="font-size: 0.8rem; color: var(--color-text-muted);">
+            Sessões gerenciadas no SQLite com revogação atômica
+        </span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="tech-table">
+            <thead>
+                <tr>
+                    <th style="padding: 10px 12px;">Pessoa / E-mail</th>
+                    <th style="padding: 10px 12px;">Papel</th>
+                    <th style="padding: 10px 12px;">Status</th>
+                    <th style="padding: 10px 12px;">Vínculo Google</th>
+                    <th style="padding: 10px 12px; text-align: right;">Ações de Controle</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in usuarios %}
+                <tr>
+                    <td style="padding: 12px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            {% if u.picture_url %}
+                                <img src="{{ u.picture_url }}" alt="Avatar" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 1px solid var(--color-border);">
+                            {% else %}
+                                <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--color-input); border: 1px solid var(--color-border); color: var(--color-yellow); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem;">
+                                    {{ u.email[0]|upper }}
+                                </div>
+                            {% endif %}
+                            <div>
+                                <strong style="color: #FFFFFF;">{{ u.name or u.email }}</strong>
+                                {% if u.name %}<br><span style="color: var(--color-text-muted); font-size: 0.8rem;">{{ u.email }}</span>{% endif %}
+                            </div>
+                        </div>
+                    </td>
+                    <td style="padding: 12px;">
+                        {% if u.role == 'admin' %}
+                            <span class="role-tag-admin">ADMINISTRADOR</span>
+                        {% else %}
+                            <span class="role-tag-user">USUÁRIO</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 12px;">
+                        {% if u.is_active %}
+                            <span class="badge badge-success">● Ativo</span>
+                        {% else %}
+                            <span class="badge badge-error">● Bloqueado</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 12px;">
+                        {% if u.third_party_pending %}
+                            <span class="badge badge-warning" title="Google Sub candidato: {{ u.candidate_sub or 'N/A' }}">
+                                ⚠️ Terceiro Pendente
+                            </span>
+                            <div style="font-size: 0.72rem; color: #FDE68A; margin-top: 2px;">
+                                Sub: {{ u.candidate_sub[:12] if u.candidate_sub else 'N/A' }}...
+                            </div>
+                        {% elif u.google_sub %}
+                            <span style="color: #94A3B8; font-size: 0.8rem;" title="{{ u.google_sub }}">
+                                ✓ Vinculado (ID: {{ u.google_sub[:8] }}...)
+                            </span>
+                        {% else %}
+                            <span style="color: var(--color-text-dim); font-style: italic; font-size: 0.8rem;">
+                                Aguardando 1º login
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 12px; text-align: right;">
+                        <div style="display: inline-flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end;">
+                            {% if u.third_party_pending and u.candidate_sub %}
+                            <form method="POST" action="/admin/usuarios/confirmar-terceiro" style="margin: 0;" onsubmit="return confirm('Confirma o vínculo com o identificador Google Sub {{ u.candidate_sub }} para {{ u.email }}?');">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                <input type="hidden" name="user_id" value="{{ u.id }}">
+                                <input type="hidden" name="candidate_sub" value="{{ u.candidate_sub }}">
+                                <button type="submit" class="btn btn-info" style="padding: 4px 8px; font-size: 0.75rem;">
+                                    Confirmar Identidade
+                                </button>
+                            </form>
+                            {% endif %}
+
+                            {% if u.is_active %}
+                            <form method="POST" action="/admin/usuarios/bloquear" style="margin: 0;" onsubmit="return confirm('Deseja realmente bloquear o acesso de {{ u.email }}? Todas as sessões ativas serão revogadas.');">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                <input type="hidden" name="user_id" value="{{ u.id }}">
+                                <button type="submit" class="btn btn-danger" style="padding: 4px 8px; font-size: 0.75rem;">
+                                    Bloquear
+                                </button>
+                            </form>
+                            {% else %}
+                            <form method="POST" action="/admin/usuarios/reativar" style="margin: 0;">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                <input type="hidden" name="user_id" value="{{ u.id }}">
+                                <button type="submit" class="btn btn-success" style="padding: 4px 8px; font-size: 0.75rem;">
+                                    Reativar
+                                </button>
+                            </form>
+                            {% endif %}
+
+                            {% if u.role == 'admin' %}
+                            <form method="POST" action="/admin/usuarios/alterar-papel" style="margin: 0;" onsubmit="return confirm('Deseja rebaixar {{ u.email }} para usuário comum?');">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                <input type="hidden" name="user_id" value="{{ u.id }}">
+                                <input type="hidden" name="novo_papel" value="user">
+                                <button type="submit" class="btn btn-dark" style="padding: 4px 8px; font-size: 0.75rem;">
+                                    Tornar Usuário
+                                </button>
+                            </form>
+                            {% else %}
+                            <form method="POST" action="/admin/usuarios/alterar-papel" style="margin: 0;">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                <input type="hidden" name="user_id" value="{{ u.id }}">
+                                <input type="hidden" name="novo_papel" value="admin">
+                                <button type="submit" class="btn btn-secondary" style="padding: 4px 8px; font-size: 0.75rem;">
+                                    Tornar Admin
+                                </button>
+                            </form>
+                            {% endif %}
+
+                            <form method="POST" action="/admin/usuarios/remover" style="margin: 0;" onsubmit="return confirm('ATENÇÃO: Deseja remover permanentemente {{ u.email }} da lista autorizada?');">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                <input type="hidden" name="user_id" value="{{ u.id }}">
+                                <button type="submit" class="btn btn-danger" style="padding: 4px 8px; font-size: 0.75rem;">
+                                    Excluir
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,21 @@
+# Licenças das Fontes Locais - Dimensave / IELECTRIC
+
+As fontes tipográficas incluídas neste diretório são disponibilizadas localmente para garantir funcionamento 100% off-line (sem chamadas a Google Fonts ou CDNs externas) e total conformidade de licenciamento:
+
+1. Montserrat (Montserrat-Regular.ttf, Montserrat-SemiBold.ttf, Montserrat-Bold.ttf)
+   - Autor: Julieta Ulanovsky (Buenos Aires)
+   - Licença: SIL Open Font License, Version 1.1 (OFL-1.1)
+   - URL: https://scripts.sil.org/OFL
+   - Permite uso, cópia, modificação e redistribuição gratuita em produtos de software.
+
+2. Inter (Inter-Regular.woff, Inter-SemiBold.woff, Inter-Regular.ttf, Inter-SemiBold.ttf)
+   - Autor: Rasmus Andersson
+   - Licença: SIL Open Font License, Version 1.1 (OFL-1.1)
+   - URL: https://github.com/rsms/inter/blob/master/LICENSE.txt
+   - Permite uso livre e incorporação web sem restrições.
+
+3. JetBrains Mono (JetBrainsMono-Regular.woff)
+   - Autor: JetBrains s.r.o.
+   - Licença: SIL Open Font License, Version 1.1 (OFL-1.1)
+   - URL: https://github.com/JetBrains/JetBrainsMono/blob/master/LICENSE
+   - Permite uso em código, fórmulas e relatórios técnicos.

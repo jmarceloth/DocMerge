@@ -1,726 +1,682 @@
-<!DOCTYPE html>
-<html lang="pt-BR" class="dark">
+{% extends "base.html" %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DocMerge PDF - Ferramentas Profissionais</title>
+{% block title %}DocMerge PDF - Ferramentas Profissionais | IELECTRIC{% endblock %}
 
-    <!-- TailwindCSS via CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
+{% block content %}
+<div style="max-width: 920px; margin: 0 auto;">
 
-    <!-- HTMX -->
-    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
-
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-
-    <style>
-        /* Custom animations and styles */
-        @keyframes gradient {
-            0% {
-                background-position: 0% 50%;
-            }
-
-            50% {
-                background-position: 100% 50%;
-            }
-
-            100% {
-                background-position: 0% 50%;
-            }
-        }
-
-        .animate-gradient {
-            background-size: 200% 200%;
-            animation: gradient 15s ease infinite;
-        }
-
-        .glass-effect {
-            background: rgba(17, 24, 39, 0.8);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(55, 65, 81, 0.3);
-        }
-
-        /* File input styling */
-        input[type="file"] {
-            display: none;
-        }
-
-        /* Progress bar animation */
-        @keyframes progress {
-            0% {
-                width: 0%;
-            }
-        }
-
-        .htmx-request .htmx-indicator {
-            display: inline-block;
-        }
-    </style>
-</head>
-
-<body class="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 text-gray-100 font-sans">
-    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-12">
-
-        <!-- Header -->
-        <div class="text-center space-y-4">
-            <div
-                class="inline-flex items-center justify-center p-3 bg-blue-500/10 rounded-2xl mb-4 ring-1 ring-blue-500/20">
-                <i data-lucide="file-text" class="w-8 h-8 text-blue-400"></i>
-            </div>
-            <h1
-                class="text-5xl font-bold tracking-tight bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
-                DocMerge PDF
-            </h1>
-            <p class="text-xl text-gray-400 max-w-2xl mx-auto">
-                Ferramentas profissionais para manipulação de PDFs
-            </p>
-        </div>
-
-        <!-- Section 1: Merge with Letterhead -->
-        <div class="relative group">
-            <div
-                class="absolute -inset-1 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000">
-            </div>
-            <div class="relative bg-gray-900 ring-1 ring-gray-800 rounded-xl p-8 shadow-2xl">
-                <div class="flex items-center gap-4 mb-8 border-b border-gray-800 pb-6">
-                    <div class="p-3 bg-blue-500/10 rounded-xl">
-                        <i data-lucide="file-text" class="w-6 h-6 text-blue-400"></i>
-                    </div>
-                    <div>
-                        <h2 class="text-2xl font-semibold text-white">Aplicar Timbrado</h2>
-                        <p class="text-sm text-gray-400">Mescle um PDF de conteúdo com um fundo timbrado.</p>
-                    </div>
-                </div>
-
-                <form id="merge-form" class="space-y-6">
-
-                    <!-- Content PDF Upload -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-300 mb-2">PDF Conteúdo</label>
-                        <div class="border-2 border-dashed border-gray-700 hover:border-blue-500/50 rounded-xl p-10 text-center cursor-pointer transition-all duration-300 group/drop"
-                            onclick="document.getElementById('merge-content').click()">
-                            <i data-lucide="upload"
-                                class="w-12 h-12 mx-auto mb-4 text-gray-500 group-hover/drop:text-blue-400 transition-colors"></i>
-                            <p class="text-gray-400 mb-2">Clique para selecionar o arquivo de conteúdo</p>
-                            <p class="text-xs text-gray-500">ou arraste e solte aqui</p>
-                        </div>
-                        <input type="file" id="merge-content" name="content" accept=".pdf" required
-                            onchange="document.querySelector('#merge-content-name').textContent = this.files[0]?.name || 'Nenhum arquivo selecionado'">
-                        <p id="merge-content-name" class="text-sm text-gray-500 mt-2">Nenhum arquivo selecionado</p>
-                    </div>
-
-                    <!-- Letterhead PDF Upload -->
-                    <div>
-                        <div class="flex items-center justify-between mb-2">
-                            <label class="block text-sm font-medium text-gray-300">PDF Timbrado</label>
-                            <button type="button" onclick="showLetterheadManager()"
-                                class="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1">
-                                <i data-lucide="settings" class="w-3 h-3"></i>
-                                Gerenciar Padrão
-                            </button>
-                        </div>
-
-                        <!-- Default Letterhead Status -->
-                        <div id="default-letterhead-status" class="mb-3 hidden">
-                            <div
-                                class="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 flex items-center justify-between">
-                                <div class="flex items-center gap-2">
-                                    <i data-lucide="check-circle" class="w-4 h-4 text-blue-400"></i>
-                                    <span class="text-sm text-blue-300">Timbrado padrão configurado</span>
-                                </div>
-                                <span class="text-xs text-gray-400">(opcional abaixo)</span>
-                            </div>
-                        </div>
-
-                        <div class="border-2 border-dashed border-gray-700 hover:border-blue-500/50 rounded-xl p-10 text-center cursor-pointer transition-all duration-300 group/drop"
-                            onclick="document.getElementById('merge-letterhead').click()">
-                            <i data-lucide="upload"
-                                class="w-12 h-12 mx-auto mb-4 text-gray-500 group-hover/drop:text-blue-400 transition-colors"></i>
-                            <p class="text-gray-400 mb-2">Timbrado personalizado (opcional)</p>
-                            <p class="text-xs text-gray-500">Deixe vazio para usar o padrão</p>
-                        </div>
-                        <input type="file" id="merge-letterhead" name="letterhead" accept=".pdf"
-                            onchange="document.querySelector('#merge-letterhead-name').textContent = this.files[0]?.name || 'Usando timbrado padrão'">
-                        <p id="merge-letterhead-name" class="text-sm text-gray-500 mt-2">Usando timbrado padrão</p>
-                    </div>
-
-                    <!-- Default Letterhead Manager Modal -->
-                    <div id="letterhead-manager-modal"
-                        class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                        <div class="bg-gray-800 rounded-xl p-6 max-w-md w-full mx-4 shadow-2xl">
-                            <div class="flex items-center justify-between mb-4">
-                                <h3 class="text-lg font-semibold text-white">Timbrado Padrão</h3>
-                                <button onclick="closeLetterheadManager()" class="text-gray-400 hover:text-white">
-                                    <i data-lucide="x" class="w-5 h-5"></i>
-                                </button>
-                            </div>
-                            <p class="text-sm text-gray-400 mb-4">
-                                Configure o timbrado que será usado automaticamente em todos os merges.
-                            </p>
-                            <div class="space-y-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-300 mb-2">Upload Novo
-                                        Timbrado</label>
-                                    <input type="file" id="default-letterhead-upload" accept=".pdf" class="hidden"
-                                        onchange="uploadDefaultLetterhead(this.files[0])">
-                                    <button type="button"
-                                        onclick="document.getElementById('default-letterhead-upload').click()"
-                                        class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg flex items-center justify-center gap-2">
-                                        <i data-lucide="upload" class="w-4 h-4"></i>
-                                        Selecionar Arquivo
-                                    </button>
-                                </div>
-                                <div id="letterhead-manager-status" class="text-sm text-gray-400"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Scale Slider -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-300 mb-2">
-                            Escala do Conteúdo: <span id="merge-scale-value">85%</span>
-                        </label>
-                        <input type="range" id="merge-scale" name="scale" min="0.5" max="1.0" step="0.01" value="0.85"
-                            class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
-                            oninput="document.getElementById('merge-scale-value').textContent = Math.round(this.value * 100) + '%'">
-                    </div>
-
-                    <!-- Submit Button -->
-                    <button type="submit"
-                        class="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-blue-500/50 flex items-center justify-center gap-2">
-                        <i data-lucide="download" class="w-5 h-5"></i>
-                        <span id="merge-button-text">Mesclar PDFs</span>
-                        <i data-lucide="loader-2" id="merge-loading" class="w-5 h-5 animate-spin hidden"></i>
-                    </button>
-                </form>
-
-                <div id="merge-result" class="mt-4"></div>
-            </div>
-        </div>
-
-        <!-- Section 2: Combine Files -->
-        <div class="relative group">
-            <div
-                class="absolute -inset-1 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000">
-            </div>
-            <div class="relative bg-gray-900 ring-1 ring-gray-800 rounded-xl p-8 shadow-2xl">
-                <div class="flex items-center gap-4 mb-8 border-b border-gray-800 pb-6">
-                    <div class="p-3 bg-purple-500/10 rounded-xl">
-                        <i data-lucide="layers" class="w-6 h-6 text-purple-400"></i>
-                    </div>
-                    <div>
-                        <h2 class="text-2xl font-semibold text-white">Combinar Arquivos</h2>
-                        <p class="text-sm text-gray-400">Junte múltiplos PDFs em um único arquivo.</p>
-                    </div>
-                </div>
-
-                <form id="combine-form" class="space-y-6">
-
-                    <!-- Multiple Files Upload -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-300 mb-2">Selecione múltiplos PDFs</label>
-                        <div class="border-2 border-dashed border-gray-700 hover:border-purple-500/50 rounded-xl p-10 text-center cursor-pointer transition-all duration-300 group/drop"
-                            onclick="document.getElementById('combine-files').click()">
-                            <i data-lucide="upload"
-                                class="w-12 h-12 mx-auto mb-4 text-gray-500 group-hover/drop:text-purple-400 transition-colors"></i>
-                            <p class="text-gray-400 mb-2">Clique para selecionar múltiplos arquivos</p>
-                            <p class="text-xs text-gray-500">ou arraste e solte aqui</p>
-                        </div>
-                        <input type="file" id="combine-files" name="files" accept=".pdf" multiple required
-                            onchange="handleCombineFilesSelected(this.files)">
-                    </div>
-
-                    <!-- File List for Reordering -->
-                    <div id="combine-files-container" class="hidden space-y-2">
-                        <div class="flex items-center justify-between mb-2">
-                            <label class="block text-sm font-medium text-gray-300">Ordem dos arquivos:</label>
-                            <button type="button" onclick="document.getElementById('combine-files').click()"
-                                class="text-xs text-purple-400 hover:text-purple-300">
-                                + Adicionar mais
-                            </button>
-                        </div>
-                        <div id="combine-files-list"
-                            class="space-y-2 bg-gray-800/50 rounded-lg p-3 max-h-60 overflow-y-auto">
-                            <!-- Files will be dynamically added here -->
-                        </div>
-                    </div>
-
-                    <!-- Submit Button -->
-                    <button type="submit"
-                        class="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-purple-500/50 flex items-center justify-center gap-2">
-                        <i data-lucide="download" class="w-5 h-5"></i>
-                        <span id="combine-button-text">Combinar Arquivos</span>
-                        <i data-lucide="loader-2" id="combine-loading" class="w-5 h-5 animate-spin hidden"></i>
-                    </button>
-                </form>
-
-                <div id="combine-result" class="mt-4"></div>
-            </div>
-        </div>
-
-        <!-- Section 3: Optimize PDF -->
-        <div class="relative group">
-            <div
-                class="absolute -inset-1 bg-gradient-to-r from-orange-600 to-amber-600 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000">
-            </div>
-            <div class="relative bg-gray-900 ring-1 ring-gray-800 rounded-xl p-8 shadow-2xl">
-                <div class="flex items-center gap-4 mb-8 border-b border-gray-800 pb-6">
-                    <div class="p-3 bg-orange-500/10 rounded-xl">
-                        <i data-lucide="zap" class="w-6 h-6 text-orange-400"></i>
-                    </div>
-                    <div>
-                        <h2 class="text-2xl font-semibold text-white">Otimizar PDF</h2>
-                        <p class="text-sm text-gray-400">Reduza o tamanho do arquivo sem perder qualidade.</p>
-                    </div>
-                </div>
-
-                <form id="optimize-form" class="space-y-6">
-
-                    <!-- PDF Upload -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-300 mb-2">PDF para otimizar</label>
-                        <div class="border-2 border-dashed border-gray-700 hover:border-orange-500/50 rounded-xl p-10 text-center cursor-pointer transition-all duration-300 group/drop"
-                            onclick="document.getElementById('optimize-file').click()">
-                            <i data-lucide="upload"
-                                class="w-12 h-12 mx-auto mb-4 text-gray-500 group-hover/drop:text-orange-400 transition-colors"></i>
-                            <p class="text-gray-400 mb-2">Clique para selecionar um PDF</p>
-                            <p class="text-xs text-gray-500">ou arraste e solte aqui</p>
-                        </div>
-                        <input type="file" id="optimize-file" name="file" accept=".pdf" required
-                            onchange="document.querySelector('#optimize-file-name').textContent = this.files[0]?.name || 'Nenhum arquivo selecionado'">
-                        <p id="optimize-file-name" class="text-sm text-gray-500 mt-2">Nenhum arquivo selecionado</p>
-                    </div>
-
-                    <!-- Quality Slider -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-300 mb-2">
-                            Qualidade da Compressão: <span id="optimize-quality-value">80%</span>
-                        </label>
-                        <input type="range" id="optimize-quality" name="quality" min="60" max="95" value="80"
-                            class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
-                            oninput="document.getElementById('optimize-quality-value').textContent = this.value + '%'">
-                        <p class="text-xs text-gray-500 mt-2">
-                            <span class="text-orange-400">Menor qualidade</span> =
-                            <span class="text-green-400">Maior compressão</span>
-                        </p>
-                    </div>
-
-                    <!-- Submit Button -->
-                    <button type="submit"
-                        class="w-full bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-orange-500/50 flex items-center justify-center gap-2">
-                        <i data-lucide="download" class="w-5 h-5"></i>
-                        <span id="optimize-button-text">Otimizar PDF</span>
-                        <i data-lucide="loader-2" id="optimize-loading" class="w-5 h-5 animate-spin hidden"></i>
-                    </button>
-                </form>
-
-                <div id="optimize-result" class="mt-4"></div>
-            </div>
-        </div>
-
+    <!-- Cabeçalho da Página -->
+    <div style="margin-bottom: 1.75rem;">
+        <h1 style="font-size: 1.75rem; font-weight: 800; color: var(--color-text); margin-bottom: 0.35rem;">
+            ⚡ Ferramentas Profissionais de Documentos PDF
+        </h1>
+        <p style="color: var(--color-text-muted); font-size: 0.95rem;">
+            Aplique o papel timbrado corporativo IELECTRIC, combine múltiplos relatórios ou otimize o tamanho de arquivos PDF com segurança.
+        </p>
     </div>
 
-    <!-- JavaScript for file downloads -->
-    <script>
-        // ========== DEFAULT LETTERHEAD MANAGER ==========
-        // Check if default letterhead exists on page load
-        async function checkDefaultLetterhead() {
-            try {
-                const response = await fetch('/api/letterhead/');
-                const data = await response.json();
+    <!-- SEÇÃO 1: APLICAR TIMBRADO -->
+    <section class="card">
+        <div class="card-header-group">
+            <div style="display: flex; align-items: center; gap: 0.85rem;">
+                <div class="brand-icon-box" style="width: 42px; height: 42px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 22px; height: 22px; fill: none;">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                    </svg>
+                </div>
+                <div>
+                    <h2 class="card-title" style="font-size: 1.25rem;">Aplicar Timbrado</h2>
+                    <p class="card-subtitle">Mescle um PDF de conteúdo com um fundo timbrado e numeração automática.</p>
+                </div>
+            </div>
+            <button type="button" onclick="showLetterheadManager()" class="btn btn-dark" style="font-size: 0.8rem; padding: 0.45rem 0.9rem;">
+                ⚙️ Gerenciar Timbrado Padrão
+            </button>
+        </div>
 
-                if (data.exists) {
-                    document.getElementById('default-letterhead-status').classList.remove('hidden');
+        <form id="merge-form" class="form-grid" style="gap: 1.35rem;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+            <!-- Upload PDF Conteúdo -->
+            <div class="form-group">
+                <label class="form-label">PDF Conteúdo <span class="required-star">*</span></label>
+                <div class="dropzone" id="dropzone-merge-content" onclick="document.getElementById('merge-content').click()">
+                    <div class="dropzone-icon">
+                        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="17 8 12 3 7 8"></polyline>
+                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                    </div>
+                    <p class="dropzone-title">Clique para selecionar o arquivo de conteúdo</p>
+                    <p class="dropzone-hint">ou arraste e solte um arquivo .pdf aqui</p>
+                </div>
+                <input type="file" id="merge-content" name="content" accept=".pdf" required class="hidden-file-input"
+                    onchange="document.querySelector('#merge-content-name').textContent = this.files[0]?.name || 'Nenhum arquivo selecionado'">
+                <p id="merge-content-name" class="file-selected-name">Nenhum arquivo selecionado</p>
+            </div>
+
+            <!-- Upload PDF Timbrado (Opcional / Padrão do Servidor) -->
+            <div class="form-group">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.35rem;">
+                    <label class="form-label" style="margin-bottom: 0;">PDF Timbrado</label>
+                    <button type="button" onclick="showLetterheadManager()" style="background: none; border: none; color: var(--color-yellow); font-size: 0.8rem; font-weight: 600; cursor: pointer;">
+                        ⚙️ Gerenciar Padrão
+                    </button>
+                </div>
+
+                <!-- Status do Timbrado Padrão no Servidor -->
+                <div id="default-letterhead-status" class="hidden" style="margin-bottom: 0.65rem;">
+                    <div class="alert alert-success" style="margin-bottom: 0; padding: 0.65rem 1rem; align-items: center; justify-content: space-between;">
+                        <span>✓ <strong>Timbrado padrão configurado no servidor</strong></span>
+                        <span style="font-size: 0.75rem; color: var(--color-text-muted);">(envio avulso opcional abaixo)</span>
+                    </div>
+                </div>
+
+                <div class="dropzone" id="dropzone-merge-letterhead" onclick="document.getElementById('merge-letterhead').click()">
+                    <div class="dropzone-icon">
+                        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="17 8 12 3 7 8"></polyline>
+                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                    </div>
+                    <p class="dropzone-title">Timbrado personalizado (opcional)</p>
+                    <p class="dropzone-hint">Deixe vazio para usar o timbrado padrão do servidor</p>
+                </div>
+                <input type="file" id="merge-letterhead" name="letterhead" accept=".pdf" class="hidden-file-input"
+                    onchange="document.querySelector('#merge-letterhead-name').textContent = this.files[0]?.name || 'Usando timbrado padrão'">
+                <p id="merge-letterhead-name" class="file-selected-name">Usando timbrado padrão</p>
+            </div>
+
+            <!-- Controle de Escala -->
+            <div class="form-group">
+                <label class="form-label" for="merge-scale">
+                    Escala do Conteúdo: <strong id="merge-scale-value" style="color: var(--color-yellow);">85%</strong>
+                </label>
+                <input type="range" id="merge-scale" name="scale" min="0.5" max="1.0" step="0.01" value="0.85"
+                    class="ielectric-slider"
+                    oninput="document.getElementById('merge-scale-value').textContent = Math.round(this.value * 100) + '%'">
+            </div>
+
+            <!-- Botão Mesclar -->
+            <button type="submit" class="btn btn-primary" style="width: 100%;">
+                <span id="merge-button-text">⬇ Mesclar PDFs</span>
+                <span id="merge-loading" class="hidden spin-icon">⏳</span>
+            </button>
+        </form>
+
+        <div id="merge-result" style="margin-top: 1rem;"></div>
+    </section>
+
+    <!-- MODAL DE GERENCIAMENTO DO TIMBRADO PADRÃO -->
+    <div id="letterhead-manager-modal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; border-bottom: 1px solid var(--color-border); padding-bottom: 0.75rem;">
+                <h3 style="font-size: 1.15rem; font-weight: 800; color: var(--color-yellow); margin: 0;">⚙️ Timbrado Padrão do Servidor</h3>
+                <button type="button" onclick="closeLetterheadManager()" class="btn-icon-sm" title="Fechar">✕</button>
+            </div>
+            <p style="font-size: 0.875rem; color: var(--color-text-muted); margin-bottom: 1.25rem;">
+                Configure o arquivo PDF de papel timbrado que será aplicado automaticamente quando nenhum timbrado avulso for selecionado.
+            </p>
+            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                <input type="file" id="default-letterhead-upload" accept=".pdf" class="hidden-file-input"
+                    onchange="uploadDefaultLetterhead(this.files[0])">
+                <button type="button" onclick="document.getElementById('default-letterhead-upload').click()" class="btn btn-primary" style="width: 100%;">
+                    📤 Enviar Novo Timbrado Padrão (.PDF)
+                </button>
+                <div style="display: flex; gap: 0.65rem;">
+                    <a href="/api/letterhead/download" id="btn-download-letterhead" class="btn btn-dark hidden" style="flex: 1; font-size: 0.82rem; padding: 0.55rem;">
+                        ⬇ Baixar Atual
+                    </a>
+                    <button type="button" id="btn-delete-letterhead" onclick="deleteDefaultLetterhead()" class="btn btn-danger hidden" style="flex: 1; font-size: 0.82rem; padding: 0.55rem;">
+                        🗑 Remover Padrão
+                    </button>
+                </div>
+                <div id="letterhead-manager-status" style="font-size: 0.85rem; margin-top: 0.35rem;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SEÇÃO 2: COMBINAR ARQUIVOS -->
+    <section class="card">
+        <div class="card-header-group">
+            <div style="display: flex; align-items: center; gap: 0.85rem;">
+                <div class="brand-icon-box" style="width: 42px; height: 42px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 22px; height: 22px; fill: none;">
+                        <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                        <polyline points="2 17 12 22 22 17"></polyline>
+                        <polyline points="2 12 12 17 22 12"></polyline>
+                    </svg>
+                </div>
+                <div>
+                    <h2 class="card-title" style="font-size: 1.25rem;">Combinar Arquivos</h2>
+                    <p class="card-subtitle">Junte múltiplos documentos PDF em um único arquivo na ordem desejada.</p>
+                </div>
+            </div>
+        </div>
+
+        <form id="combine-form" class="form-grid" style="gap: 1.35rem;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+            <div class="form-group">
+                <label class="form-label">Selecione múltiplos PDFs <span class="required-star">*</span></label>
+                <div class="dropzone" id="dropzone-combine-files" onclick="document.getElementById('combine-files').click()">
+                    <div class="dropzone-icon">
+                        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="17 8 12 3 7 8"></polyline>
+                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                    </div>
+                    <p class="dropzone-title">Clique para selecionar múltiplos arquivos PDF</p>
+                    <p class="dropzone-hint">ou arraste e solte os arquivos .pdf aqui</p>
+                </div>
+                <input type="file" id="combine-files" name="files" accept=".pdf" multiple class="hidden-file-input">
+            </div>
+
+            <!-- Lista de Arquivos para Reordenação -->
+            <div id="combine-files-container" class="hidden form-group">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.35rem;">
+                    <label class="form-label" style="margin-bottom: 0;">Ordem dos arquivos:</label>
+                    <button type="button" onclick="document.getElementById('combine-files').click()" style="background: none; border: none; color: var(--color-yellow); font-size: 0.8rem; font-weight: 700; cursor: pointer;">
+                        + Adicionar mais arquivos
+                    </button>
+                </div>
+                <div id="combine-files-list" class="file-reorder-list"></div>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%;">
+                <span id="combine-button-text">⬇ Combinar Arquivos</span>
+                <span id="combine-loading" class="hidden spin-icon">⏳</span>
+            </button>
+        </form>
+
+        <div id="combine-result" style="margin-top: 1rem;"></div>
+    </section>
+
+    <!-- SEÇÃO 3: OTIMIZAR PDF -->
+    <section class="card">
+        <div class="card-header-group">
+            <div style="display: flex; align-items: center; gap: 0.85rem;">
+                <div class="brand-icon-box" style="width: 42px; height: 42px;">
+                    <svg viewBox="0 0 24 24" fill="currentColor" style="width: 22px; height: 22px;">
+                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                    </svg>
+                </div>
+                <div>
+                    <h2 class="card-title" style="font-size: 1.25rem;">Otimizar PDF</h2>
+                    <p class="card-subtitle">Reduza o tamanho do arquivo comprimindo imagens e estruturas internas.</p>
+                </div>
+            </div>
+        </div>
+
+        <form id="optimize-form" class="form-grid" style="gap: 1.35rem;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+            <div class="form-group">
+                <label class="form-label">PDF para otimizar <span class="required-star">*</span></label>
+                <div class="dropzone" id="dropzone-optimize-file" onclick="document.getElementById('optimize-file').click()">
+                    <div class="dropzone-icon">
+                        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="17 8 12 3 7 8"></polyline>
+                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                    </div>
+                    <p class="dropzone-title">Clique para selecionar um arquivo PDF</p>
+                    <p class="dropzone-hint">ou arraste e solte o arquivo .pdf aqui</p>
+                </div>
+                <input type="file" id="optimize-file" name="file" accept=".pdf" required class="hidden-file-input"
+                    onchange="document.querySelector('#optimize-file-name').textContent = this.files[0]?.name || 'Nenhum arquivo selecionado'">
+                <p id="optimize-file-name" class="file-selected-name">Nenhum arquivo selecionado</p>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="optimize-quality">
+                    Qualidade da Compressão: <strong id="optimize-quality-value" style="color: var(--color-yellow);">80%</strong>
+                </label>
+                <input type="range" id="optimize-quality" name="quality" min="60" max="95" value="80"
+                    class="ielectric-slider"
+                    oninput="document.getElementById('optimize-quality-value').textContent = this.value + '%'">
+                <p class="form-help">
+                    <span style="color: var(--color-yellow);">Menor qualidade</span> =
+                    <span style="color: var(--color-success);">Maior compressão e menor tamanho final</span>
+                </p>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%;">
+                <span id="optimize-button-text">⬇ Otimizar PDF</span>
+                <span id="optimize-loading" class="hidden spin-icon">⏳</span>
+            </button>
+        </form>
+
+        <div id="optimize-result" style="margin-top: 1rem;"></div>
+    </section>
+
+</div>
+
+<script>
+    function getCsrfToken() {
+        const meta = document.querySelector('meta[name="csrf-token"]');
+        return meta ? meta.getAttribute('content') : '';
+    }
+
+    async function extractErrorMessage(response, fallbackMsg) {
+        if (response.status === 401) {
+            window.location.href = '/login';
+            throw new Error('Sessão expirada. Redirecionando para o login...');
+        }
+        try {
+            const errData = await response.json();
+            return errData.detail || fallbackMsg;
+        } catch (_) {
+            return fallbackMsg;
+        }
+    }
+
+    // ========== GERENCIADOR DE TIMBRADO PADRÃO (SERVIDOR) ==========
+    async function checkDefaultLetterhead() {
+        try {
+            const response = await fetch('/api/letterhead/', {
+                headers: { 'Accept': 'application/json' }
+            });
+            if (!response.ok) return;
+            const data = await response.json();
+
+            const statusBox = document.getElementById('default-letterhead-status');
+            const btnDownload = document.getElementById('btn-download-letterhead');
+            const btnDelete = document.getElementById('btn-delete-letterhead');
+
+            if (data.exists) {
+                statusBox.classList.remove('hidden');
+                btnDownload.classList.remove('hidden');
+                btnDelete.classList.remove('hidden');
+                if (!document.getElementById('merge-letterhead').files[0]) {
                     document.querySelector('#merge-letterhead-name').textContent = 'Usando timbrado padrão';
                 }
-                lucide.createIcons();
-            } catch (e) {
-                console.error('Error checking default letterhead:', e);
+            } else {
+                statusBox.classList.add('hidden');
+                btnDownload.classList.add('hidden');
+                btnDelete.classList.add('hidden');
             }
+        } catch (e) {
+            console.error('Erro ao verificar timbrado padrão:', e);
         }
+    }
 
-        function showLetterheadManager() {
-            document.getElementById('letterhead-manager-modal').classList.remove('hidden');
-            lucide.createIcons();
-        }
+    function showLetterheadManager() {
+        document.getElementById('letterhead-manager-modal').classList.remove('hidden');
+    }
 
-        function closeLetterheadManager() {
-            document.getElementById('letterhead-manager-modal').classList.add('hidden');
-        }
+    function closeLetterheadManager() {
+        document.getElementById('letterhead-manager-modal').classList.add('hidden');
+    }
 
-        async function uploadDefaultLetterhead(file) {
-            if (!file) return;
+    async function uploadDefaultLetterhead(file) {
+        if (!file) return;
+        const statusDiv = document.getElementById('letterhead-manager-status');
+        statusDiv.innerHTML = '<span style="color: var(--color-yellow);">Enviando e validando PDF...</span>';
 
-            const statusDiv = document.getElementById('letterhead-manager-status');
-            statusDiv.innerHTML = '<span class="text-blue-400">Enviando...</span>';
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('csrf_token', getCsrfToken());
 
-            try {
-                const formData = new FormData();
-                formData.append('file', file);
-
-                const response = await fetch('/api/letterhead/', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                if (!response.ok) throw new Error('Erro ao fazer upload');
-
-                const data = await response.json();
-                statusDiv.innerHTML = '<span class="text-green-400">✓ ' + data.message + '</span>';
-
-                // Update UI
-                document.getElementById('default-letterhead-status').classList.remove('hidden');
-                document.querySelector('#merge-letterhead-name').textContent = 'Usando timbrado padrão';
-
-                lucide.createIcons();
-
-                setTimeout(() => {
-                    closeLetterheadManager();
-                    statusDiv.innerHTML = '';
-                }, 2000);
-
-            } catch (error) {
-                statusDiv.innerHTML = '<span class="text-red-400">✗ Erro: ' + error.message + '</span>';
-            }
-        }
-
-        // ========== LETTERHEAD CACHE (DEPRECATED - Using server-side now) ==========
-        const LETTERHEAD_CACHE_KEY = 'docmerge_last_letterhead';
-
-        // Load cached letterhead on page load
-        window.addEventListener('DOMContentLoaded', async () => {
-            // Check server-side default first
-            await checkDefaultLetterhead();
-            const cachedData = localStorage.getItem(LETTERHEAD_CACHE_KEY);
-            if (cachedData) {
-                try {
-                    const { filename, dataUrl } = JSON.parse(cachedData);
-                    // Show cached letterhead info
-                    document.querySelector('#merge-letterhead-name').innerHTML = `
-                        ${filename} <span class="text-purple-400 text-xs">(salvo)</span>
-                    `;
-                } catch (e) {
-                    console.error('Error loading cached letterhead:', e);
-                }
-            }
-        });
-
-        // Save letterhead to cache when selected
-        document.getElementById('merge-letterhead').addEventListener('change', async function (e) {
-            const file = e.target.files[0];
-            if (file) {
-                // Update name display
-                document.querySelector('#merge-letterhead-name').textContent = file.name;
-
-                // Save to localStorage
-                try {
-                    const reader = new FileReader();
-                    reader.onload = function (event) {
-                        const dataUrl = event.target.result;
-                        localStorage.setItem(LETTERHEAD_CACHE_KEY, JSON.stringify({
-                            filename: file.name,
-                            dataUrl: dataUrl,
-                            timestamp: new Date().toISOString()
-                        }));
-                    };
-                    reader.readAsDataURL(file);
-                } catch (e) {
-                    console.error('Error caching letterhead:', e);
-                }
-            }
-        });
-
-        // Get letterhead file (from input or cache)
-        async function getLetterheadFile() {
-            const inputFile = document.getElementById('merge-letterhead').files[0];
-            if (inputFile) return inputFile;
-
-            // Try to get from cache
-            const cachedData = localStorage.getItem(LETTERHEAD_CACHE_KEY);
-            if (cachedData) {
-                try {
-                    const { filename, dataUrl } = JSON.parse(cachedData);
-                    const response = await fetch(dataUrl);
-                    const blob = await response.blob();
-                    return new File([blob], filename, { type: 'application/pdf' });
-                } catch (e) {
-                    console.error('Error retrieving cached letterhead:', e);
-                    return null;
-                }
-            }
-            return null;
-        }
-
-        // ========== COMBINE FILE REORDERING ==========
-        let combineFilesList = [];
-
-        function handleCombineFilesSelected(files) {
-            // Add new files to the list
-            Array.from(files).forEach(file => {
-                if (!combineFilesList.some(f => f.name === file.name && f.size === file.size)) {
-                    combineFilesList.push(file);
-                }
+            const response = await fetch('/api/letterhead/', {
+                method: 'POST',
+                headers: { 'X-CSRF-Token': getCsrfToken() },
+                body: formData
             });
 
-            renderCombineFilesList();
+            if (!response.ok) {
+                const msg = await extractErrorMessage(response, 'Erro ao fazer upload do timbrado');
+                throw new Error(msg);
+            }
+
+            const data = await response.json();
+            statusDiv.innerHTML = '<span style="color: var(--color-success);">✓ ' + data.message + '</span>';
+            await checkDefaultLetterhead();
+
+            setTimeout(() => {
+                closeLetterheadManager();
+                statusDiv.innerHTML = '';
+            }, 1500);
+        } catch (error) {
+            statusDiv.innerHTML = '<span style="color: var(--color-error);">✗ Erro: ' + error.message + '</span>';
+        }
+    }
+
+    async function deleteDefaultLetterhead() {
+        if (!confirm('Deseja realmente remover o timbrado padrão do servidor?')) return;
+        const statusDiv = document.getElementById('letterhead-manager-status');
+        try {
+            const response = await fetch('/api/letterhead/', {
+                method: 'DELETE',
+                headers: { 'X-CSRF-Token': getCsrfToken() }
+            });
+            if (!response.ok) {
+                const msg = await extractErrorMessage(response, 'Erro ao remover timbrado');
+                throw new Error(msg);
+            }
+            statusDiv.innerHTML = '<span style="color: var(--color-success);">✓ Timbrado padrão removido.</span>';
+            await checkDefaultLetterhead();
+        } catch (error) {
+            statusDiv.innerHTML = '<span style="color: var(--color-error);">✗ Erro: ' + error.message + '</span>';
+        }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+        checkDefaultLetterhead();
+        setupDropzones();
+    });
+
+    // ========== SUPORTE DRAG & DROP ==========
+    function setupDropzones() {
+        const bindDropzone = (zoneId, inputId, onFiles) => {
+            const zone = document.getElementById(zoneId);
+            const input = document.getElementById(inputId);
+            if (!zone || !input) return;
+
+            ['dragenter', 'dragover'].forEach(evt => {
+                zone.addEventListener(evt, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    zone.classList.add('dragover');
+                });
+            });
+            ['dragleave', 'drop'].forEach(evt => {
+                zone.addEventListener(evt, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    zone.classList.remove('dragover');
+                });
+            });
+            zone.addEventListener('drop', (e) => {
+                const files = e.dataTransfer?.files;
+                if (!files || files.length === 0) return;
+                if (onFiles) {
+                    onFiles(files);
+                } else {
+                    input.files = files;
+                    input.dispatchEvent(new Event('change'));
+                }
+            });
+        };
+
+        bindDropzone('dropzone-merge-content', 'merge-content');
+        bindDropzone('dropzone-merge-letterhead', 'merge-letterhead');
+        bindDropzone('dropzone-combine-files', 'combine-files', handleCombineFilesSelected);
+        bindDropzone('dropzone-optimize-file', 'optimize-file');
+    }
+
+    // ========== REORDENAÇÃO DE ARQUIVOS (COMBINAR) ==========
+    let combineFilesList = [];
+
+    function handleCombineFilesSelected(files) {
+        Array.from(files).forEach(file => {
+            if (!combineFilesList.some(f => f.name === file.name && f.size === file.size)) {
+                combineFilesList.push(file);
+            }
+        });
+        renderCombineFilesList();
+        if (combineFilesList.length > 0) {
             document.getElementById('combine-files-container').classList.remove('hidden');
         }
+    }
 
-        function renderCombineFilesList() {
-            const container = document.getElementById('combine-files-list');
-            container.innerHTML = '';
+    function renderCombineFilesList() {
+        const container = document.getElementById('combine-files-list');
+        container.innerHTML = '';
 
-            combineFilesList.forEach((file, index) => {
-                const fileItem = document.createElement('div');
-                fileItem.className = 'flex items-center justify-between bg-gray-700/50 rounded-lg p-3 group hover:bg-gray-700 transition-colors';
-                fileItem.innerHTML = `
-                    <div class="flex items-center gap-3 flex-1">
-                        <span class="text-gray-400 font-mono text-sm">${index + 1}.</span>
-                        <i data-lucide="file-text" class="w-4 h-4 text-purple-400"></i>
-                        <span class="text-sm text-gray-300 truncate">${file.name}</span>
-                        <span class="text-xs text-gray-500">(${(file.size / 1024).toFixed(1)} KB)</span>
-                    </div>
-                    <div class="flex gap-2">
-                        <button type="button" ${index === 0 ? 'disabled' : ''} onclick="moveCombineFile(${index}, -1)"
-                                class="p-1 hover:bg-gray-600 rounded disabled:opacity-30 disabled:cursor-not-allowed">
-                            <i data-lucide="arrow-up" class="w-4 h-4 text-gray-400"></i>
-                        </button>
-                        <button type="button" ${index === combineFilesList.length - 1 ? 'disabled' : ''} onclick="moveCombineFile(${index}, 1)"
-                                class="p-1 hover:bg-gray-600 rounded disabled:opacity-30 disabled:cursor-not-allowed">
-                            <i data-lucide="arrow-down" class="w-4 h-4 text-gray-400"></i>
-                        </button>
-                        <button type="button" onclick="removeCombineFile(${index})"
-                                class="p-1 hover:bg-red-600 rounded">
-                            <i data-lucide="x" class="w-4 h-4 text-red-400"></i>
-                        </button>
-                    </div>
-                `;
-                container.appendChild(fileItem);
+        combineFilesList.forEach((file, index) => {
+            const fileItem = document.createElement('div');
+            fileItem.className = 'file-reorder-item';
+
+            const infoDiv = document.createElement('div');
+            infoDiv.className = 'file-reorder-info';
+
+            const idxSpan = document.createElement('span');
+            idxSpan.className = 'file-reorder-index';
+            idxSpan.textContent = `${index + 1}.`;
+
+            const nameSpan = document.createElement('span');
+            nameSpan.className = 'file-reorder-name';
+            nameSpan.textContent = file.name;
+
+            const sizeSpan = document.createElement('span');
+            sizeSpan.className = 'file-reorder-size';
+            sizeSpan.textContent = `(${(file.size / 1024).toFixed(1)} KB)`;
+
+            infoDiv.appendChild(idxSpan);
+            infoDiv.appendChild(nameSpan);
+            infoDiv.appendChild(sizeSpan);
+
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'file-reorder-actions';
+
+            const upBtn = document.createElement('button');
+            upBtn.type = 'button';
+            upBtn.className = 'btn-icon-sm';
+            upBtn.disabled = index === 0;
+            upBtn.title = 'Mover para cima';
+            upBtn.textContent = '↑';
+            upBtn.onclick = () => moveCombineFile(index, -1);
+
+            const downBtn = document.createElement('button');
+            downBtn.type = 'button';
+            downBtn.className = 'btn-icon-sm';
+            downBtn.disabled = index === combineFilesList.length - 1;
+            downBtn.title = 'Mover para baixo';
+            downBtn.textContent = '↓';
+            downBtn.onclick = () => moveCombineFile(index, 1);
+
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'btn-icon-sm danger';
+            removeBtn.title = 'Remover arquivo';
+            removeBtn.textContent = '✕';
+            removeBtn.onclick = () => removeCombineFile(index);
+
+            actionsDiv.appendChild(upBtn);
+            actionsDiv.appendChild(downBtn);
+            actionsDiv.appendChild(removeBtn);
+
+            fileItem.appendChild(infoDiv);
+            fileItem.appendChild(actionsDiv);
+            container.appendChild(fileItem);
+        });
+    }
+
+    function moveCombineFile(index, direction) {
+        const newIndex = index + direction;
+        if (newIndex < 0 || newIndex >= combineFilesList.length) return;
+        [combineFilesList[index], combineFilesList[newIndex]] = [combineFilesList[newIndex], combineFilesList[index]];
+        renderCombineFilesList();
+    }
+
+    function removeCombineFile(index) {
+        combineFilesList.splice(index, 1);
+        renderCombineFilesList();
+        if (combineFilesList.length === 0) {
+            document.getElementById('combine-files-container').classList.add('hidden');
+        }
+    }
+
+    document.getElementById('combine-files').addEventListener('change', function (e) {
+        handleCombineFilesSelected(e.target.files);
+    });
+
+    function triggerBlobDownload(blob, filename) {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+    }
+
+    // ========== MESCLAR PDF COM TIMBRADO ==========
+    document.getElementById('merge-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const contentFile = document.getElementById('merge-content').files[0];
+        const letterheadFile = document.getElementById('merge-letterhead').files[0];
+        const scale = document.getElementById('merge-scale').value;
+
+        if (!contentFile) {
+            alert('Por favor, selecione o PDF de conteúdo.');
+            return;
+        }
+
+        document.getElementById('merge-loading').classList.remove('hidden');
+        document.getElementById('merge-button-text').textContent = 'Processando...';
+
+        try {
+            const formData = new FormData();
+            formData.append('content', contentFile);
+            if (letterheadFile) {
+                formData.append('letterhead', letterheadFile);
+            }
+            formData.append('scale', scale);
+            formData.append('csrf_token', getCsrfToken());
+
+            const response = await fetch('/api/merge/', {
+                method: 'POST',
+                headers: { 'X-CSRF-Token': getCsrfToken() },
+                body: formData
             });
 
-            lucide.createIcons();
+            if (!response.ok) {
+                const msg = await extractErrorMessage(response, 'Erro ao processar PDFs');
+                throw new Error(msg);
+            }
+
+            const blob = await response.blob();
+            triggerBlobDownload(blob, 'mesclado.pdf');
+
+            document.getElementById('merge-result').innerHTML = `
+                <div class="alert alert-success" style="margin-bottom: 0;">
+                    <span>✓ PDF mesclado com timbrado com sucesso!</span>
+                </div>
+            `;
+        } catch (error) {
+            document.getElementById('merge-result').innerHTML = `
+                <div class="alert alert-error" style="margin-bottom: 0;">
+                    <span>✗ Erro: ${error.message}</span>
+                </div>
+            `;
+        } finally {
+            document.getElementById('merge-loading').classList.add('hidden');
+            document.getElementById('merge-button-text').textContent = '⬇ Mesclar PDFs';
+        }
+    });
+
+    // ========== COMBINAR MÚLTIPLOS PDFS ==========
+    document.getElementById('combine-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        if (combineFilesList.length < 2) {
+            alert('Por favor, selecione pelo menos 2 arquivos PDF.');
+            return;
         }
 
-        function moveCombineFile(index, direction) {
-            const newIndex = index + direction;
-            if (newIndex < 0 || newIndex >= combineFilesList.length) return;
+        document.getElementById('combine-loading').classList.remove('hidden');
+        document.getElementById('combine-button-text').textContent = 'Processando...';
 
-            [combineFilesList[index], combineFilesList[newIndex]] = [combineFilesList[newIndex], combineFilesList[index]];
-            renderCombineFilesList();
+        try {
+            const formData = new FormData();
+            combineFilesList.forEach(file => {
+                formData.append('files', file);
+            });
+            formData.append('csrf_token', getCsrfToken());
+
+            const response = await fetch('/api/combine/', {
+                method: 'POST',
+                headers: { 'X-CSRF-Token': getCsrfToken() },
+                body: formData
+            });
+
+            if (!response.ok) {
+                const msg = await extractErrorMessage(response, 'Erro ao combinar PDFs');
+                throw new Error(msg);
+            }
+
+            const blob = await response.blob();
+            triggerBlobDownload(blob, 'combinado.pdf');
+
+            document.getElementById('combine-result').innerHTML = `
+                <div class="alert alert-success" style="margin-bottom: 0;">
+                    <span>✓ PDFs combinados com sucesso!</span>
+                </div>
+            `;
+        } catch (error) {
+            document.getElementById('combine-result').innerHTML = `
+                <div class="alert alert-error" style="margin-bottom: 0;">
+                    <span>✗ Erro: ${error.message}</span>
+                </div>
+            `;
+        } finally {
+            document.getElementById('combine-loading').classList.add('hidden');
+            document.getElementById('combine-button-text').textContent = '⬇ Combinar Arquivos';
+        }
+    });
+
+    // ========== OTIMIZAR PDF ==========
+    document.getElementById('optimize-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const file = document.getElementById('optimize-file').files[0];
+        const quality = document.getElementById('optimize-quality').value;
+
+        if (!file) {
+            alert('Por favor, selecione um arquivo PDF.');
+            return;
         }
 
-        function removeCombineFile(index) {
-            combineFilesList.splice(index, 1);
-            renderCombineFilesList();
+        document.getElementById('optimize-loading').classList.remove('hidden');
+        document.getElementById('optimize-button-text').textContent = 'Processando...';
 
-            if (combineFilesList.length === 0) {
-                document.getElementById('combine-files-container').classList.add('hidden');
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('quality', quality);
+            formData.append('csrf_token', getCsrfToken());
+
+            const response = await fetch('/api/optimize/', {
+                method: 'POST',
+                headers: { 'X-CSRF-Token': getCsrfToken() },
+                body: formData
+            });
+
+            if (!response.ok) {
+                const msg = await extractErrorMessage(response, 'Erro ao otimizar PDF');
+                throw new Error(msg);
             }
+
+            const blob = await response.blob();
+            triggerBlobDownload(blob, 'otimizado.pdf');
+
+            document.getElementById('optimize-result').innerHTML = `
+                <div class="alert alert-success" style="margin-bottom: 0;">
+                    <span>✓ PDF otimizado com sucesso!</span>
+                </div>
+            `;
+        } catch (error) {
+            document.getElementById('optimize-result').innerHTML = `
+                <div class="alert alert-error" style="margin-bottom: 0;">
+                    <span>✗ Erro: ${error.message}</span>
+                </div>
+            `;
+        } finally {
+            document.getElementById('optimize-loading').classList.add('hidden');
+            document.getElementById('optimize-button-text').textContent = '⬇ Otimizar PDF';
         }
-
-        // Attach event listener for combine files
-        document.getElementById('combine-files').addEventListener('change', function (e) {
-            handleCombineFilesSelected(e.target.files);
-        });
-
-        // ========== MERGE PDFs HANDLER ==========
-        document.getElementById('merge-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-
-            const contentFile = document.getElementById('merge-content').files[0];
-            const letterheadFile = document.getElementById('merge-letterhead').files[0]; // Optional now
-            const scale = document.getElementById('merge-scale').value;
-
-            if (!contentFile) {
-                alert('Por favor, selecione o PDF de conteúdo');
-                return;
-            }
-
-            // Show loading
-            document.getElementById('merge-loading').classList.remove('hidden');
-            document.getElementById('merge-button-text').textContent = 'Processando...';
-
-            try {
-                const formData = new FormData();
-                formData.append('content', contentFile);
-                // Only append letterhead if user selected one (otherwise backend uses default)
-                if (letterheadFile) {
-                    formData.append('letterhead', letterheadFile);
-                }
-                formData.append('scale', scale);
-
-                const response = await fetch('/api/merge/', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.detail || 'Erro ao processar PDFs');
-                }
-
-                // Get the PDF blob
-                const blob = await response.blob();
-
-                // Download file
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'mesclado.pdf';
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
-                document.body.removeChild(a);
-
-                // Success message
-                document.getElementById('merge-result').innerHTML = `
-                    <div class="bg-green-500/10 border border-green-500/30 rounded-lg p-4 text-green-400">
-                        <p>✓ PDF mesclado com sucesso!</p>
-                    </div>
-                `;
-
-            } catch (error) {
-                document.getElementById('merge-result').innerHTML = `
-                    <div class="bg-red-500/10 border border-red-500/30 rounded-lg p-4 text-red-400">
-                        <p>✗ Erro: ${error.message}</p>
-                    </div>
-                `;
-            } finally {
-                // Hide loading
-                document.getElementById('merge-loading').classList.add('hidden');
-                document.getElementById('merge-button-text').textContent = 'Mesclar PDFs';
-            }
-        });
-
-        // Combine PDFs handler
-        document.getElementById('combine-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-
-            if (combineFilesList.length < 2) {
-                alert('Por favor, selecione pelo menos 2 arquivos');
-                return;
-            }
-
-            // Show loading
-            document.getElementById('combine-loading').classList.remove('hidden');
-            document.getElementById('combine-button-text').textContent = 'Processando...';
-
-            try {
-                const formData = new FormData();
-                // Use the reordered file list
-                combineFilesList.forEach(file => {
-                    formData.append('files', file);
-                });
-
-                const response = await fetch('/api/combine/', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                if (!response.ok) {
-                    throw new Error('Erro ao combinar PDFs');
-                }
-
-                // Get the PDF blob
-                const blob = await response.blob();
-
-                // Download file
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'combinado.pdf';
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
-                document.body.removeChild(a);
-
-                // Success message
-                document.getElementById('combine-result').innerHTML = `
-                    <div class="bg-green-500/10 border border-green-500/30 rounded-lg p-4 text-green-400">
-                        <p>✓ PDFs combinados com sucesso!</p>
-                    </div>
-                `;
-
-            } catch (error) {
-                document.getElementById('combine-result').innerHTML = `
-                    <div class="bg-red-500/10 border border-red-500/30 rounded-lg p-4 text-red-400">
-                        <p>✗ Erro: ${error.message}</p>
-                    </div>
-                `;
-            } finally {
-                // Hide loading
-                document.getElementById('combine-loading').classList.add('hidden');
-                document.getElementById('combine-button-text').textContent = 'Combinar Arquivos';
-            }
-        });
-
-        // Optimize PDF handler
-        document.getElementById('optimize-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-
-            const file = document.getElementById('optimize-file').files[0];
-            const quality = document.getElementById('optimize-quality').value;
-
-            if (!file) {
-                alert('Por favor, selecione um arquivo');
-                return;
-            }
-
-            // Show loading
-            document.getElementById('optimize-loading').classList.remove('hidden');
-            document.getElementById('optimize-button-text').textContent = 'Processando...';
-
-            try {
-                const formData = new FormData();
-                formData.append('file', file);
-                formData.append('quality', quality);
-
-                const response = await fetch('/api/optimize/', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                if (!response.ok) {
-                    throw new Error('Erro ao otimizar PDF');
-                }
-
-                // Get the PDF blob
-                const blob = await response.blob();
-
-                // Download file
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'otimizado.pdf';
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
-                document.body.removeChild(a);
-
-                // Success message
-                document.getElementById('optimize-result').innerHTML = `
-                    <div class="bg-green-500/10 border border-green-500/30 rounded-lg p-4 text-green-400">
-                        <p>✓ PDF otimizado com sucesso!</p>
-                    </div>
-                `;
-
-            } catch (error) {
-                document.getElementById('optimize-result').innerHTML = `
-                    <div class="bg-red-500/10 border border-red-500/30 rounded-lg p-4 text-red-400">
-                        <p>✗ Erro: ${error.message}</p>
-                    </div>
-                `;
-            } finally {
-                // Hide loading
-                document.getElementById('optimize-loading').classList.add('hidden');
-                document.getElementById('optimize-button-text').textContent = 'Otimizar PDF';
-            }
-        });
-
-        lucide.createIcons();
-    </script>
-</body>
-
-</html>
+    });
+</script>
+{% endblock %}
