@@ -2,8 +2,9 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Instalar dependências de sistema necessárias ao PyMuPDF
+# Instalar dependências de sistema necessárias ao PyMuPDF e healthcheck do Coolify
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
     libmupdf-dev \
     mupdf-tools \
     ca-certificates \
