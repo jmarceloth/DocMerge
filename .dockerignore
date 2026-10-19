@@ -1,32 +1,51 @@
-# Python
+# Git
+.git/
+.gitignore
+
+# Python & Ambientes Virtuais
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
+.venv/
 venv/
 env/
 ENV/
+.pytest_cache/
+tests/
 
-# React/Node (legacy)
-node_modules/
-dist/
-build/
-.vite/
+# Segredos, Bancos Locais e PDFs
+.env
+.env.*
+!.env.example
+client_secret*.json
+token*.json
+*.pem
+*.key
+data/
+*.db
+*.db-wal
+*.db-shm
+*.pdf
+timbrado_padrao.pdf
+app/uploads/*.pdf
 
-# IDE
+# IDE & OS
 .vscode/
 .idea/
 *.swp
 *.swo
-
-# OS
 .DS_Store
 Thumbs.db
 
-# Logs
+# Logs & Temp
 *.log
-
-# Temp
 *.tmp
 temp/
+
+# Legado
+node_modules/
+dist/
+build/
+.vite/
