@@ -1,1 +1,1 @@
-"""Empty __init__.py for routers package"""
+from app.routers import merge, combine, optimize, letterhead, auth, admin
